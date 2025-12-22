@@ -12,9 +12,6 @@ vim.keymap.set('n', '<leader>sr', ':luafile %<CR>', { noremap = true })
 vim.keymap.set({ 'n', 'v' }, 'H', '^', { noremap = true })
 vim.keymap.set({ 'n', 'v' }, 'L', '$', { noremap = true })
 
--- Use unix line endings
-vim.keymap.set("n", "<C-M>", [[:%s/\r//g<CR>]], { desc = "Remove ^M (CR) chars" })
-
 -- Jump backward/forward
 vim.keymap.set('n', '<C-j>', '<C-o>', { noremap = true })
 vim.keymap.set('n', '<C-_>', '<C-i>')
