@@ -4,7 +4,7 @@ return {
 		version = '*', -- Keep Nightly for best text-edit support
 		dependencies = {
 			'rafamadriz/friendly-snippets',
-			{ 'saghen/blink.compat', opts = { impersonate_nvim_cmp = true } },
+			{ 'saghen/blink.compat', opts = { impersonate_nvim_cmp = false } },
 			'supermaven-inc/supermaven-nvim',
 		},
 
@@ -86,10 +86,19 @@ return {
 						module = "blink.compat.source",
 						score_offset = 100,
 						async = true,
-						-- Force Snippet kind to fix text overwriting issues
 						transform_items = function(_, items)
+							local CompletionItemKind = require('blink.cmp.types').CompletionItemKind
+							local kind_idx = CompletionItemKind.Snippet
+
 							for _, item in ipairs(items) do
-								item.kind = require('blink.cmp.types').CompletionItemKind.Snippet
+								-- 1. Keep your fix for text overwriting
+								item.kind = kind_idx
+
+								-- 2. Add a visual marker (Star symbol) to LabelDetails
+								-- This appears in the menu next to the suggestion
+								item.labelDetails = {
+									detail = " "
+								}
 							end
 							return items
 						end,
