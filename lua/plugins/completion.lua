@@ -56,10 +56,6 @@ return {
 				list = {
 					selection = {
 						preselect = false, -- Don't select automatically when menu opens
-
-						-- !!! THE CHANGE !!!
-						-- When you manually select an item (with Tab/Arrows),
-						-- it immediately writes it to the buffer (Preview Mode).
 						auto_insert = true
 					}
 				},
