@@ -11,22 +11,15 @@ return {
 		opts = {
 			keymap = {
 				preset = 'default',
+				['<C-l>'] = {
+					'select_and_accept'
+				},
 				['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
 				['<Up>'] = { 'select_prev', 'fallback' },
 				['<Down>'] = { 'select_next', 'fallback' },
 				['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
 				['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
-
-				-- Your "Firewall" Enter Key (Prevents New Line crashes)
-				['<CR>'] = {
-					function(cmp)
-						if cmp.is_visible() and cmp.get_selected_item() then
-							cmp.accept()
-							return true
-						end
-					end,
-					'fallback'
-				},
+				['<CR>'] = { 'accept', 'fallback' },
 			},
 
 			appearance = {
