@@ -3,7 +3,7 @@ return {
 	dependencies = {
 		"williamboman/mason.nvim",
 		"williamboman/mason-lspconfig.nvim",
-		"saghen/blink.cmp",
+		"saghen/blink.cmp", -- Currently commented out
 	},
 	config = function()
 		-- 1. Keymaps (Run when an LSP attaches to a buffer)
@@ -34,15 +34,19 @@ return {
 		})
 
 		-- 3. Setup Mason-LSPConfig (The Downloader ONLY)
-		-- We removed 'handlers' to prevent it from calling deprecated code.
 		require("mason-lspconfig").setup({
 			ensure_installed = { "lua_ls", "gopls" },
 			automatic_installation = true,
 		})
 
 		-- 4. Manual Server Setup (Native 0.11 Way)
-		-- We explicitly configure only the servers we want.
-		local capabilities = require('blink.cmp').get_lsp_capabilities()
+		-- FAILSAFE: Start with defaults, only use Blink if it loads
+		local capabilities = vim.lsp.protocol.make_client_capabilities()
+		local has_blink, blink = pcall(require, 'blink.cmp')
+
+		if has_blink then
+			capabilities = blink.get_lsp_capabilities()
+		end
 
 		-- --- Lua LS Setup ---
 		vim.lsp.config("lua_ls", {
@@ -56,19 +60,20 @@ return {
 		vim.lsp.enable("lua_ls")
 
 		-- --- Gopls Setup (if you want it controlled here) ---
-		-- If you are using go.nvim, skip this block.
-		-- Otherwise, uncomment to enable native handling:
 		-- vim.lsp.config("gopls", { capabilities = capabilities })
 		-- vim.lsp.enable("gopls")
 
 		-- --- Rust Analyzer Setup (For your Fedora System) ---
-		-- Since you use rustup, we point specifically to the wrapper we found earlier.
-		-- We generally don't need to specify 'cmd' if it's in your path,
-		-- but this ensures we use the correct one.
 		vim.lsp.config("rust_analyzer", {
 			capabilities = capabilities,
 			cmd = { "rustup", "run", "stable", "rust-analyzer" },
 		})
 		vim.lsp.enable("rust_analyzer")
+
+		-- Zig
+		vim.lsp.config("zls", {
+			capabilities = capabilities,
+		})
+		vim.lsp.enable("zls")
 	end
 }

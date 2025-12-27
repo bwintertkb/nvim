@@ -1,7 +1,8 @@
 return {
 	{
 		'saghen/blink.cmp',
-		version = '*', -- Keep Nightly for best text-edit support
+		version = '*', -- Keep Nightly
+		enabled = false,
 		dependencies = {
 			'rafamadriz/friendly-snippets',
 			{ 'saghen/blink.compat', opts = { impersonate_nvim_cmp = false } },
@@ -11,15 +12,37 @@ return {
 		opts = {
 			keymap = {
 				preset = 'default',
-				['<C-l>'] = {
-					'select_and_accept'
-				},
+				['<C-l>'] = { 'select_and_accept' },
 				['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
 				['<Up>'] = { 'select_prev', 'fallback' },
 				['<Down>'] = { 'select_next', 'fallback' },
 				['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
 				['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
-				['<CR>'] = { 'accept', 'fallback' },
+
+				-- !!! THE FIX: The Wake-Up Firewall !!!
+				['<CR>'] = {
+					function(cmp)
+						-- 1. Command Mode: Standard behavior (Enter executes command)
+						if vim.fn.mode() == 'c' then
+							return cmp.accept() or cmp.select_and_accept()
+						end
+
+						-- 2. Insert Mode: Strict Protection against the "Idle Bug"
+						if cmp.is_visible() then
+							-- Try to accept the current item
+							if cmp.get_selected_item() then
+								cmp.accept()
+							else
+								-- If state is stale (nothing selected despite menu open), force it
+								cmp.select_and_accept()
+							end
+							-- CRITICAL: Always return true if menu was visible.
+							-- This stops the "New Line" fallback even if the engine glitches.
+							return true
+						end
+					end,
+					'fallback' -- Only insert new line if menu was completely closed
+				},
 			},
 
 			appearance = {
@@ -55,8 +78,8 @@ return {
 			completion = {
 				list = {
 					selection = {
-						preselect = false, -- Don't select automatically when menu opens
-						auto_insert = true
+						preselect = false,
+						auto_insert = true -- Keeping your preference
 					}
 				},
 				documentation = {
@@ -75,16 +98,15 @@ return {
 						module = "blink.compat.source",
 						score_offset = 100,
 						async = true,
+						-- Added timeout to prevent hanging on wake-up
+						timeout_ms = 3000,
+
 						transform_items = function(_, items)
 							local CompletionItemKind = require('blink.cmp.types').CompletionItemKind
 							local kind_idx = CompletionItemKind.Snippet
 
 							for _, item in ipairs(items) do
-								-- 1. Keep your fix for text overwriting
 								item.kind = kind_idx
-
-								-- 2. Add a visual marker (Star symbol) to LabelDetails
-								-- This appears in the menu next to the suggestion
 								item.labelDetails = {
 									detail = " "
 								}
@@ -92,7 +114,12 @@ return {
 							return items
 						end,
 					},
-					lsp = { name = 'LSP', module = 'blink.cmp.sources.lsp' },
+					lsp = {
+						name = 'LSP',
+						module = 'blink.cmp.sources.lsp',
+						-- Added timeout for Rust Analyzer/LSPs waking up
+						timeout_ms = 5000,
+					},
 					path = { name = 'Path', module = 'blink.cmp.sources.path' },
 				},
 			},
