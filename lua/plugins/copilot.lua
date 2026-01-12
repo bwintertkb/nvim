@@ -6,6 +6,7 @@ return {
 		opts = {
 			suggestion = { enabled = false },
 			panel = { enabled = false },
+			debounce = 25,
 			filetypes = {
 				markdown = true,
 				help = true,

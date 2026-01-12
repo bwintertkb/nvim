@@ -105,7 +105,7 @@ return {
 							for _, item in ipairs(items) do
 								item.kind = kind_idx
 								item.labelDetails = {
-									detail = " " -- GitHub icon in the detail column
+									detail = " "
 								}
 							end
 							return items
