@@ -4,10 +4,9 @@ return {
 		cmd = "Copilot",
 		event = "InsertEnter",
 		opts = {
-			-- Start disabled
-			enabled = false,
-			suggestion = { enabled = false },
-			panel = { enabled = false },
+			-- suggestion/panel settings must be true for them to work WHEN enabled
+			suggestion = { enabled = true, auto_trigger = true },
+			panel = { enabled = true },
 			filetypes = {
 				markdown = true,
 				help = true,
@@ -16,10 +15,14 @@ return {
 		config = function(_, opts)
 			require("copilot").setup(opts)
 
+			-- FORCE DISABLE ON STARTUP
+			require("copilot.command").disable()
+
 			local function toggle_copilot()
 				local client = require("copilot.client")
 				local command = require("copilot.command")
 
+				-- Since we force disabled on start, this logic now tracks correctly
 				if client.is_disabled() then
 					command.enable()
 					vim.api.nvim_echo({ { "    Copilot Enabled  ", "MoreMsg" } }, false, {})
@@ -28,7 +31,6 @@ return {
 					vim.api.nvim_echo({ { "    Copilot Disabled  ", "WarningMsg" } }, false, {})
 				end
 
-				-- Clear message after 1.5s
 				vim.defer_fn(function()
 					vim.api.nvim_echo({}, false, {})
 				end, 1500)
