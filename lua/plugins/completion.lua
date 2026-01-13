@@ -5,7 +5,6 @@ return {
 		enabled = true,
 		dependencies = {
 			'rafamadriz/friendly-snippets',
-			-- The native bridge for Copilot (no blink.compat needed)
 			'giuxtaposition/blink-cmp-copilot',
 		},
 
@@ -19,15 +18,12 @@ return {
 				['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
 				['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
 
-				-- !!! THE FIX: The Wake-Up Firewall (Preserved) !!!
+				-- !!! THE FIX: The Wake-Up Firewall !!!
 				['<CR>'] = {
 					function(cmp)
-						-- 1. Command Mode: Standard behavior
 						if vim.fn.mode() == 'c' then
 							return cmp.accept() or cmp.select_and_accept()
 						end
-
-						-- 2. Insert Mode: Strict Protection against the "Idle Bug"
 						if cmp.is_visible() then
 							if cmp.get_selected_item() then
 								cmp.accept()
@@ -68,7 +64,7 @@ return {
 					Event = '󰏜',
 					Operator = '󰆕',
 					TypeParameter = '󰅲',
-					Copilot = '', -- Added specific icon for Copilot
+					Copilot = '', -- Fallback definition
 				},
 			},
 
@@ -88,7 +84,6 @@ return {
 			},
 
 			sources = {
-				-- Added 'copilot' to the default list
 				default = { 'lsp', 'copilot', 'path', 'snippets', 'buffer' },
 				providers = {
 					copilot = {
@@ -99,14 +94,14 @@ return {
 
 						transform_items = function(_, items)
 							local CompletionItemKind = require('blink.cmp.types').CompletionItemKind
-							-- Using 'Event' (or you could use 'Copilot' if your font supports it)
-							local kind_idx = CompletionItemKind.Event
+							local kind_idx = CompletionItemKind.Copilot or CompletionItemKind.Text
 
 							for _, item in ipairs(items) do
+								-- 1. Set kind to something safe (Text or Copilot)
 								item.kind = kind_idx
-								item.labelDetails = {
-									detail = " "
-								}
+								-- 2. NUCLEAR OVERRIDE: Directly set the icon property
+								-- This forces Blink to use this character, ignoring all theme tables
+								item.kind_icon = ""
 							end
 							return items
 						end,
