@@ -35,7 +35,7 @@ return {
 
 		-- 3. Setup Mason-LSPConfig (The Downloader ONLY)
 		require("mason-lspconfig").setup({
-			ensure_installed = { "lua_ls", "gopls" },
+			ensure_installed = { "lua_ls", "gopls", "clangd" },
 			automatic_installation = true,
 		})
 
@@ -75,5 +75,18 @@ return {
 			capabilities = capabilities,
 		})
 		vim.lsp.enable("zls")
+
+		-- C / C++
+		vim.lsp.config("clangd", {
+			capabilities = capabilities,
+			cmd = {
+				"clangd",
+				"--background-index",
+				"--clang-tidy",
+				"--completion-style=detailed",
+				"--header-insertion=iwyu"
+			},
+		})
+		vim.lsp.enable("clangd") -- You were missing this line
 	end
 }

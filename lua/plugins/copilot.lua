@@ -5,7 +5,7 @@ return {
 		event = "InsertEnter",
 		opts = {
 			-- suggestion/panel settings must be true for them to work WHEN enabled
-			suggestion = { enabled = true, auto_trigger = true },
+			suggestion = { enabled = true, auto_trigger = false },
 			panel = { enabled = true },
 			filetypes = {
 				markdown = true,
