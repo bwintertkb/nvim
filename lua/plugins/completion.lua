@@ -17,24 +17,7 @@ return {
 				['<Down>'] = { 'select_next', 'fallback' },
 				['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
 				['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
-
-				-- !!! THE FIX: The Wake-Up Firewall !!!
-				['<CR>'] = {
-					function(cmp)
-						if vim.fn.mode() == 'c' then
-							return cmp.accept() or cmp.select_and_accept()
-						end
-						if cmp.is_visible() then
-							if cmp.get_selected_item() then
-								cmp.accept()
-							else
-								cmp.select_and_accept()
-							end
-							return true
-						end
-					end,
-					'fallback'
-				},
+				['<CR>'] = { 'accept', 'fallback' }, -- No more complex wrapper needed!
 			},
 
 			appearance = {
@@ -81,6 +64,7 @@ return {
 					window = { border = 'rounded' },
 				},
 				ghost_text = { enabled = false },
+				accept = { auto_brackets = { enabled = true } }, -- Enable native auto-brackets
 			},
 
 			sources = {

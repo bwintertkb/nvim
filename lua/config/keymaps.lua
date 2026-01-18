@@ -35,3 +35,18 @@ vim.keymap.set({ "n", "t" }, "<C-j>", function()
 	-- Automatically enter Insert mode so you can type immediately
 	vim.cmd("startinsert")
 end, { desc = "Open Vertical Terminal" })
+
+vim.keymap.set('i', '<CR>', function()
+	-- Get the character pair under the cursor
+	local pair = vim.api.nvim_get_current_line():sub(
+		vim.api.nvim_win_get_cursor(0)[2],
+		vim.api.nvim_win_get_cursor(0)[2] + 1
+	)
+
+	-- If inside {} or () or [], expand on Enter
+	if vim.tbl_contains({ '{}', '[]', '()' }, pair) then
+		return '<CR><C-c>O' -- Enter + fix indentation
+	end
+
+	return '<CR>'
+end, { expr = true, remap = false })
