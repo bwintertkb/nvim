@@ -40,28 +40,28 @@ vim.opt.backspace = "indent,eol,start"
 -- [Shell]
 -- User command with completion and history
 vim.api.nvim_create_user_command("R", function(opts)
-  local output = vim.fn.systemlist(opts.args)
-  vim.cmd("botright 15new")
-  vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
-  vim.bo.buftype = "nofile"
-  vim.bo.bufhidden = "wipe"
-  vim.bo.swapfile = false
-  vim.bo.filetype = "sh"
+	local output = vim.fn.systemlist(opts.args)
+	vim.cmd("botright 15new")
+	vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
+	vim.bo.buftype = "nofile"
+	vim.bo.bufhidden = "wipe"
+	vim.bo.swapfile = false
+	vim.bo.filetype = "sh"
 end, {
-  nargs = "+",
-  complete = function(arglead, cmdline, cursorpos)
-    -- Get file completions
-    local files = vim.fn.getcompletion(arglead, "file")
-    -- Get shell command completions (for first argument)
-    local parts = vim.split(cmdline, "%s+")
-    if #parts <= 2 then  -- still on first arg (command name)
-      local cmds = vim.fn.getcompletion(arglead, "shellcmd")
-      for _, cmd in ipairs(cmds) do
-        table.insert(files, cmd)
-      end
-    end
-    return files
-  end,
+	nargs = "+",
+	complete = function(arglead, cmdline, cursorpos)
+		-- Get file completions
+		local files = vim.fn.getcompletion(arglead, "file")
+		-- Get shell command completions (for first argument)
+		local parts = vim.split(cmdline, "%s+")
+		if #parts <= 2 then -- still on first arg (command name)
+			local cmds = vim.fn.getcompletion(arglead, "shellcmd")
+			for _, cmd in ipairs(cmds) do
+				table.insert(files, cmd)
+			end
+		end
+		return files
+	end,
 })
 
 vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
@@ -85,6 +85,9 @@ vim.pack.add({
 	"https://github.com/windwp/nvim-autopairs",
 	"https://github.com/chrisgrieser/nvim-lsp-endhints",
 	"https://github.com/bwintertkb/visual_wrap.nvim",
+	"https://github.com/zbirenbaum/copilot.lua",
+	"https://github.com/saghen/blink.cmp",
+	"https://github.com/giuxtaposition/blink-cmp-copilot",
 })
 
 -- [File explorer]
@@ -454,8 +457,88 @@ end
 
 setup_dynamic_statusline()
 
+-- [Copilot]
+require("copilot").setup({
+	suggestion = { enabled = false }, -- disabled, using blink.cmp instead
+	panel = { enabled = true },
+	filetypes = {
+		markdown = true,
+		help = true,
+	},
+})
+
+-- Force disable on startup (silently)
+local original_notify = vim.notify
+vim.notify = function(...) end
+require("copilot.command").disable()
+vim.defer_fn(function()
+	vim.notify = original_notify
+end, 100)
+
+-- Toggle function
+local function toggle_copilot()
+	local client = require("copilot.client")
+	local command = require("copilot.command")
+	if client.is_disabled() then
+		command.enable()
+		vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
+	else
+		command.disable()
+		vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
+	end
+	vim.defer_fn(function()
+		vim.api.nvim_echo({}, false, {})
+	end, 1500)
+end
+
+vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
+
+-- [Completion with blink.cmp]
+require("blink.cmp").setup({
+	keymap = {
+		preset = 'default',
+		['<C-l>'] = { 'select_and_accept' },
+		['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+		['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+		['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
+		['<Space>'] = { 'accept', 'fallback' },
+	},
+	appearance = {
+		use_nvim_cmp_as_default = true,
+		nerd_font_variant = 'mono',
+	},
+	completion = {
+		list = {
+			selection = { preselect = false, auto_insert = true }
+		},
+		documentation = {
+			auto_show = true,
+			auto_show_delay_ms = 200,
+		},
+		ghost_text = { enabled = false },
+	},
+	sources = {
+		default = { 'lsp', 'copilot', 'path', 'buffer' },
+		providers = {
+			copilot = {
+				name = "copilot",
+				module = "blink-cmp-copilot",
+				score_offset = 100,
+				async = true,
+				transform_items = function(_, items)
+					for _, item in ipairs(items) do
+						item.kind_icon = "★"
+					end
+					return items
+				end,
+			},
+		},
+	},
+	signature = { enabled = true },
+})
+
 -- [LSP CONFIG]
--- On attach: enable completion
+-- On attach: enable inlay hints
 vim.api.nvim_create_autocmd('LspAttach', {
 	callback = function(args)
 		local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -464,19 +547,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
 		if client and client:supports_method('textDocument/inlayHint') then
 			vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
 		end
-
-		-- Completion (your existing code)
-		if client and client:supports_method('textDocument/completion') then
-			local triggers = client.server_capabilities.completionProvider.triggerCharacters or {}
-			for c = string.byte('a'), string.byte('z') do
-				table.insert(triggers, string.char(c))
-			end
-			for c = string.byte('A'), string.byte('Z') do
-				table.insert(triggers, string.char(c))
-			end
-			client.server_capabilities.completionProvider.triggerCharacters = triggers
-			vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
-		end
 	end,
 })
 
@@ -484,27 +554,6 @@ vim.keymap.set('n', '<leader>h', function()
 	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }))
 end, { desc = 'Toggle inlay hints' })
 
--- Completion menu navigation
-vim.keymap.set('i', '<Tab>', function()
-	return vim.fn.pumvisible() == 1 and '<C-n>' or '<Tab>'
-end, { expr = true })
-
-vim.keymap.set('i', '<S-Tab>', function()
-	return vim.fn.pumvisible() == 1 and '<C-p>' or '<S-Tab>'
-end, { expr = true })
-
-vim.keymap.set('i', '<Space>', function()
-	if vim.fn.pumvisible() == 1 then
-		local info = vim.fn.complete_info({ 'selected' })
-		if info.selected >= 0 then
-			return '<C-y>'
-		end
-	end
-	return '<Space>'
-end, { expr = true })
-
--- Completion options
-vim.opt.completeopt = { 'menuone', 'noselect', 'popup' }
 -- Keymaps
 vim.keymap.set('n', 'gR', '<cmd>lua vim.lsp.buf.rename()<cr>')
 vim.keymap.set('n', '<c-]>', '<cmd>lua vim.lsp.buf.definition()<cr>')
