@@ -42,6 +42,9 @@ vim.o.autoindent = true
 vim.opt.hidden = true
 vim.opt.errorbells = false
 vim.opt.backspace = "indent,eol,start"
+-- Use ripgrep as grep default
+vim.o.grepprg = "rg --vimgrep --smart-case"
+vim.o.grepformat = "%f:%l:%c:%m"
 
 -- [Shell]
 -- User command with completion and history
