@@ -9,6 +9,8 @@ vim.api.nvim_set_keymap('n', 'L', '$', { noremap = true })
 -- Better indenting in visual mode (stay in visual mode after indent)
 vim.keymap.set("v", "<", "<gv", { desc = "Indent left and reselect" })
 vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
+-- Playback macro in register with capital Q
+vim.keymap.set('n', 'Q', '@q', { desc = 'Play macro q' })
 
 -- Highlight yanked text
 vim.api.nvim_create_autocmd("TextYankPost", {
