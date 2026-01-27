@@ -327,6 +327,13 @@ hl(0, "@lsp.type.property", { link = "Identifier" })
 hl(0, "@variable.lua", { link = "@function.call.lua" })
 hl(0, "@y9nika.variable", { link = "@function.call.lua" })
 hl(0, "@y9nika.variable.lua", { link = "@function.call.lua" })
+hl(0, "@lsp.type.function", { link = "Function" })
+hl(0, "@lsp.type.method", { link = "Function" })
+hl(0, "@lsp.typemod.function.declaration", { link = "Function" })
+hl(0, "@lsp.typemod.method.declaration", { link = "Function" })
+hl(0, "@function.call.rust", { fg = "#71ade7" })
+hl(0, "@variable.member.rust", { fg = "#71ade7" })
+hl(0, "@variable.rust", { link = "Identifier" })
 
 -- [Auto pair]
 require("nvim-autopairs").setup({
@@ -696,7 +703,7 @@ vim.lsp.config('rust_analyzer', {
 	capabilities = vim.lsp.protocol.make_client_capabilities(),
 	settings = {
 		['rust-analyzer'] = {
-			semanticHighlighting = { enable = false },
+			semanticHighlighting = { enable = true },
 			assist = {
 				importEnforceGranularity = true,
 				importPrefix = 'crate',
