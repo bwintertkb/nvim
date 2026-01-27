@@ -602,7 +602,7 @@ require("blink.cmp").setup({
 			},
 		},
 	},
-	signature = { enabled = true },
+	signature = { enabled = false },
 })
 
 -- [LSP CONFIG]
