@@ -333,8 +333,6 @@ hl(0, "@lsp.type.method", { link = "Function" })
 hl(0, "@lsp.typemod.function.declaration", { link = "Function" })
 hl(0, "@lsp.typemod.method.declaration", { link = "Function" })
 hl(0, "@function.call.rust", { fg = "#71ade7" })
-hl(0, "@variable.member.rust", { fg = "#71ade7" })
-hl(0, "@variable.rust", { link = "Identifier" })
 
 -- [Auto pair]
 require("nvim-autopairs").setup({
@@ -582,7 +580,7 @@ require("blink.cmp").setup({
 			selection = { preselect = false, auto_insert = true }
 		},
 		documentation = {
-			auto_show = true,
+			auto_show = false,
 			auto_show_delay_ms = 200,
 		},
 		ghost_text = { enabled = false },
