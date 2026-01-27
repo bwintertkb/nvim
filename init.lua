@@ -251,6 +251,7 @@ vim.keymap.set('n', '<C-p>', '<CMD>Files<CR>', {
 vim.keymap.set('n', '<TAB>', '<CMD>History<CR>', {
 	desc = 'Recent files (fzf)'
 })
+vim.keymap.set('n', '<C-u>', '<CMD>Rg<CR>', { desc = 'Grep project' })
 
 -- [Visual wrap]
 require("visual_wrap").setup()
