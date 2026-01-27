@@ -21,7 +21,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 -- [Cursor]
 -- Keep cursor a block in normal and insert mode
-vim.opt.guicursor = "n-v-c:block-Cursor,i-ci-ve:block-CursorInsert,r-cr-o:block-CursorReplace"
+vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
 
 -- [Options]
 vim.o.clipboard = "unnamedplus"
@@ -265,6 +265,17 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.o.termguicolors = true
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+	callback = function()
+		local hl = vim.api.nvim_set_hl
+		hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5555" })
+		hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#f1fa8c" })
+		hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#8be9fd" })
+		hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#50fa7b" })
+	end,
+})
+
 vim.cmd.colorscheme('y9nika-less')
 
 require("y9nika.core").apply {
@@ -342,12 +353,21 @@ require("lsp-endhints").setup({
 
 -- [Statusline]
 -- Git branch function
+local cached_branch = ""
+local branch_cache_time = 0
+
 local function git_branch()
-	local branch = vim.fn.system("git branch --show-current 2>/dev/null | tr -d '\n'")
-	if branch ~= "" then
-		return "  " .. branch .. " "
+	local now = vim.loop.now()
+	if now - branch_cache_time > 5000 then  -- refresh every 5 seconds
+		branch_cache_time = now
+		local branch = vim.fn.system("git branch --show-current 2>/dev/null | tr -d '\n'")
+		if branch ~= "" and not branch:match("^fatal") then
+			cached_branch = "  " .. branch .. " "
+		else
+			cached_branch = ""
+		end
 	end
-	return ""
+	return cached_branch
 end
 
 -- File type with icon
