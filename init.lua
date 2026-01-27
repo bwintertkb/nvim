@@ -1,7 +1,6 @@
 vim.g.mapleader = " "
 
--- [Global general keymaps]
--- Map jk as escape key in insert mode
+-- [Global general keymaps] Map jk as escape key in insert mode
 vim.api.nvim_set_keymap('i', 'jk', '<ESC>', { noremap = true })
 -- H goes to first non-blank character, L goes to end of line
 vim.api.nvim_set_keymap('n', 'H', '^', { noremap = true })
@@ -97,6 +96,22 @@ vim.pack.add({
 	"https://github.com/zbirenbaum/copilot.lua",
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/giuxtaposition/blink-cmp-copilot",
+	"https://github.com/nvimtools/hydra.nvim",
+})
+
+-- [Hydra] Pane resizing
+local Hydra = require('hydra')
+Hydra({
+	name = 'Resize',
+	mode = 'n',
+	body = '<C-w>',
+	heads = {
+		{ 'H', '<cmd>vertical resize +5<cr>' },
+		{ 'L', '<cmd>vertical resize -5<cr>' },
+		{ 'K', '<cmd>resize +5<cr>' },
+		{ 'J', '<cmd>resize -5<cr>' },
+		{ '<Esc>', nil, { exit = true, nowait = true } },
+	},
 })
 
 -- [File explorer]
@@ -588,13 +603,16 @@ vim.keymap.set('n', '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
 vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>')
 vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>')
 vim.keymap.set('n', 'gc', '<cmd>lua vim.lsp.buf.incoming_calls()<cr>')
+vim.keymap.set('n', 'gC', '<cmd>lua vim.lsp.buf.outgoing_calls()<cr>')
 vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.type_definition()<cr>')
 vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.document_symbol()<cr>')
+vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>')
 vim.keymap.set('n', 'gw', '<cmd>lua vim.lsp.buf.workspace_symbol()<cr>')
+vim.keymap.set('n', '<leader>.', '<cmd>lua vim.lsp.buf.code_action()<cr>')
 vim.keymap.set('n', '[x', '<cmd>lua vim.diagnostic.goto_prev()<cr>')
 vim.keymap.set('n', ']x', '<cmd>lua vim.diagnostic.goto_next()<cr>')
-vim.keymap.set('n', ']s', '<cmd>lua vim.diagnostic.open_float()<cr>')
-vim.keymap.set('n', '<leader>.', '<cmd>lua vim.lsp.buf.code_action()<cr>')
+vim.keymap.set('n', '<leader>d', '<cmd>lua vim.diagnostic.open_float()<cr>')
+vim.keymap.set('n', '<leader>q', '<cmd>lua vim.diagnostic.setqflist()<cr>')
 vim.keymap.set('n', '<leader>p', '<cmd>lua vim.lsp.buf.format()<cr>')
 
 -- Format using LSP
