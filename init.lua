@@ -18,6 +18,10 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
+-- [Cursor]
+-- Keep cursor a block in normal and insert mode
+vim.opt.guicursor = "n-v-c:block-Cursor,i-ci-ve:block-CursorInsert,r-cr-o:block-CursorReplace"
+
 -- [Options]
 vim.o.clipboard = "unnamedplus"
 vim.o.number = true
@@ -379,7 +383,7 @@ local function mode_icon()
 		["!"] = "SHELL",
 		t = "TERMINAL"
 	}
-	return (modes[mode] or "  ") .. mode:upper()
+	return modes[mode] or  mode:upper()
 end
 
 -- Diagnostic counts for statusline
@@ -447,11 +451,29 @@ local function setup_dynamic_statusline()
 		end
 	})
 	vim.api.nvim_set_hl(0, "StatusLineBold", { bold = true })
-
 	vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave" }, {
 		callback = function()
 			vim.opt_local.statusline = "  %f %h%m%r │ %{v:lua.file_type()} | %=  %l:%c   %P "
 		end
+	})
+
+
+	vim.opt.cursorline = true
+
+	vim.api.nvim_create_autocmd("ModeChanged", {
+		callback = function()
+			local mode = vim.fn.mode()
+			if mode == "i" then
+				vim.api.nvim_set_hl(0, "CursorLine", { bg = "#252525" })
+				vim.api.nvim_set_hl(0, "StatusLine", { bg = "#303030", fg = "#ffffff" })
+			elseif mode == "v" or mode == "V" or mode == "\22" then
+				vim.api.nvim_set_hl(0, "CursorLine", { bg = "#3a3a3a" })
+				vim.api.nvim_set_hl(0, "StatusLine", { bg = "#454545", fg = "#ffffff" })
+			else
+				vim.api.nvim_set_hl(0, "CursorLine", { bg = "#1e1e1e" })
+				vim.api.nvim_set_hl(0, "StatusLine", { bg = "#2a2a2a", fg = "#ffffff" })
+			end
+		end,
 	})
 end
 
