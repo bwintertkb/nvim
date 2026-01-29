@@ -24,6 +24,10 @@
       "rev": "8c4a9f621ec7cdc30411a1f3b6d5eebb12b469dc",
       "src": "https://github.com/nvimtools/hydra.nvim"
     },
+    "mini.icons": {
+      "rev": "efc85e42262cd0c9e1fdbf806c25cb0be6de115c",
+      "src": "https://github.com/nvim-mini/mini.icons"
+    },
     "nvim-autopairs": {
       "rev": "c2a0dd0d931d0fb07665e1fedb1ea688da3b80b4",
       "src": "https://github.com/windwp/nvim-autopairs"
@@ -43,6 +47,18 @@
     "oil.nvim": {
       "rev": "f55b25e493a7df76371cfadd0ded5004cb9cd48a",
       "src": "https://github.com/stevearc/oil.nvim"
+    },
+    "vim-airline": {
+      "rev": "b03fdc542f5155b54959102a2aecaf6c792dce01",
+      "src": "https://github.com/vim-airline/vim-airline"
+    },
+    "vim-airline-themes": {
+      "rev": "77aab8c6cf7179ddb8a05741da7e358a86b2c3ab",
+      "src": "https://github.com/vim-airline/vim-airline-themes"
+    },
+    "vim-fugitive": {
+      "rev": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4",
+      "src": "https://github.com/tpope/vim-fugitive"
     },
     "visual_wrap.nvim": {
       "rev": "5d8a4d8fb2651c4aa2a9b04ab999607ef5221b44",

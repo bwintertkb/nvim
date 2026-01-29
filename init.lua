@@ -41,6 +41,7 @@ vim.o.autoindent = true
 vim.opt.hidden = true
 vim.opt.errorbells = false
 vim.opt.backspace = "indent,eol,start"
+vim.opt.statuscolumn = ""
 -- Use ripgrep as grep default
 vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
@@ -97,6 +98,9 @@ vim.pack.add({
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/giuxtaposition/blink-cmp-copilot",
 	"https://github.com/nvimtools/hydra.nvim",
+	"https://github.com/vim-airline/vim-airline",
+	"https://github.com/vim-airline/vim-airline-themes",
+	"https://github.com/tpope/vim-fugitive",
 })
 
 -- [Hydra] Pane resizing
@@ -106,11 +110,11 @@ Hydra({
 	mode = 'n',
 	body = '<C-w>',
 	heads = {
-		{ 'H', '<cmd>vertical resize +5<cr>' },
-		{ 'L', '<cmd>vertical resize -5<cr>' },
-		{ 'K', '<cmd>resize +5<cr>' },
-		{ 'J', '<cmd>resize -5<cr>' },
-		{ '<Esc>', nil, { exit = true, nowait = true } },
+		{ 'H',     '<cmd>vertical resize +5<cr>' },
+		{ 'L',     '<cmd>vertical resize -5<cr>' },
+		{ 'K',     '<cmd>resize +5<cr>' },
+		{ 'J',     '<cmd>resize -5<cr>' },
+		{ '<Esc>', nil,                          { exit = true, nowait = true } },
 	},
 })
 
@@ -118,17 +122,18 @@ Hydra({
 require("oil").setup({
 	default_file_explorer = true,
 	columns = {
-		"icon",
 	},
 	buf_options = {
 		buflisted = false,
 		bufhidden = "hide",
 	},
 	win_options = {
+		statuscolumn = "",
 		signcolumn = "no",
 		number = true,
 		relativenumber = true,
-		statuscolumn = "",
+		conceallevel = 3,
+		concealcursor = "nvic",
 	},
 	delete_to_trash = false,
 	skip_confirm_for_simple_edits = false,
@@ -238,6 +243,16 @@ require("oil").setup({
 
 vim.api.nvim_set_keymap('n', '=', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "oil",
+	callback = function()
+		vim.wo.statuscolumn = ""
+		vim.wo.signcolumn = "no"
+		vim.wo.conceallevel = 3
+		vim.wo.concealcursor = "nvic"
+	end,
+})
+
 -- File explorer for all files with fzf
 -- Use fd instead
 -- File explorer for all files with fzf
@@ -261,7 +276,9 @@ require("visual_wrap").setup()
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "*",
 	callback = function()
-		pcall(vim.treesitter.start)
+		if vim.bo.filetype ~= "oil" then
+			pcall(vim.treesitter.start)
+		end
 	end,
 })
 
@@ -358,172 +375,22 @@ require("lsp-endhints").setup({
 
 
 -- [Statusline]
--- Git branch function
-local cached_branch = ""
-local branch_cache_time = 0
+vim.g.airline_theme = "minimalist"
+vim.g.airline_powerline_fonts = 0
+vim.g["airline#extensions#branch#enabled"] = 1
+vim.g.airline_section_b = "%{airline#extensions#branch#get_head()}"
+vim.g.airline_section_b = "%{FugitiveHead()}"
+vim.g.airline_left_sep = ""
+vim.g.airline_right_sep = ""
+vim.g.airline_left_alt_sep = ""
+vim.g.airline_right_alt_sep = ""
+vim.g.airline_section_y = ""
+vim.g.airline_section_z = "L:%l/%L C:%c"
+vim.g["airline#extensions#whitespace#enabled"] = 0
 
-local function git_branch()
-	local now = vim.loop.now()
-	if now - branch_cache_time > 5000 then  -- refresh every 5 seconds
-		branch_cache_time = now
-		local branch = vim.fn.system("git branch --show-current 2>/dev/null | tr -d '\n'")
-		if branch ~= "" and not branch:match("^fatal") then
-			cached_branch = "  " .. branch .. " "
-		else
-			cached_branch = ""
-		end
-	end
-	return cached_branch
-end
+-- force redraw once everything is loaded
+vim.cmd("silent! AirlineRefresh")
 
--- File type with icon
-local function file_type()
-	local ft = vim.bo.filetype
-	local icons = {
-		lua = "[LUA]",
-		python = "[PY]",
-		javascript = "[JS]",
-		html = "[HTML]",
-		css = "[CSS]",
-		json = "[JSON]",
-		markdown = "[MD]",
-		vim = "[VIM]",
-		sh = "[SH]",
-	}
-
-	if ft == "" then
-		return "  "
-	end
-
-	return (icons[ft] or ft)
-end
-
--- File size
-local function file_size()
-	local size = vim.fn.getfsize(vim.fn.expand('%'))
-	if size < 0 then return "" end
-	if size < 1024 then
-		return size .. "B "
-	elseif size < 1024 * 1024 then
-		return string.format("%.1fK", size / 1024)
-	else
-		return string.format("%.1fM", size / 1024 / 1024)
-	end
-end
-
--- Mode indicators with icons
-local function mode_icon()
-	local mode = vim.fn.mode()
-	local modes = {
-		n = "NORMAL",
-		i = "INSERT",
-		v = "VISUAL",
-		V = "V-LINE",
-		["\22"] = "V-BLOCK", -- Ctrl-V
-		c = "COMMAND",
-		s = "SELECT",
-		S = "S-LINE",
-		["\19"] = "S-BLOCK", -- Ctrl-S
-		R = "REPLACE",
-		r = "REPLACE",
-		["!"] = "SHELL",
-		t = "TERMINAL"
-	}
-	return modes[mode] or  mode:upper()
-end
-
--- Diagnostic counts for statusline
-local function diagnostics()
-	local errors = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
-	local warnings = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
-	local parts = {}
-	if #errors > 0 then
-		local first_line = errors[1].lnum + 1 -- diagnostics are 0-indexed
-		for _, e in ipairs(errors) do
-			if e.lnum + 1 < first_line then
-				first_line = e.lnum + 1
-			end
-		end
-		parts[#parts + 1] = "%#StatusLineError# " .. #errors .. " (ln " .. first_line .. ")"
-	end
-	if #warnings > 0 then
-		local first_line = warnings[1].lnum + 1
-		for _, w in ipairs(warnings) do
-			if w.lnum + 1 < first_line then
-				first_line = w.lnum + 1
-			end
-		end
-		parts[#parts + 1] = "%#StatusLineWarn# " .. #warnings .. " (ln " .. first_line .. ")"
-	end
-	if #parts > 0 then
-		return table.concat(parts, " ") .. " %#StatusLine#"
-	end
-	return ""
-end
-_G.mode_icon = mode_icon
-_G.git_branch = git_branch
-_G.file_type = file_type
-_G.file_size = file_size
-_G.diagnostics = diagnostics
-
-vim.cmd([[
-  highlight StatusLineBold gui=bold cterm=bold
-]])
-
-vim.api.nvim_set_hl(0, "StatusLineError",
-	{ fg = "#ff5555", bg = vim.api.nvim_get_hl(0, { name = "StatusLine" }).bg, bold = true })
-vim.api.nvim_set_hl(0, "StatusLineWarn",
-	{ fg = "#f1fa8c", bg = vim.api.nvim_get_hl(0, { name = "StatusLine" }).bg, bold = true })
-
--- Function to change statusline based on window focus
-local function setup_dynamic_statusline()
-	vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter" }, {
-		callback = function()
-			vim.opt_local.statusline = table.concat {
-				"  ",
-				"%#StatusLineBold#",
-				"%{%v:lua.mode_icon()%}",
-				"%#StatusLine#",
-				" │ %f %h%m%r",
-				"%{%v:lua.git_branch()%}",
-				" │ ",
-				"%{%v:lua.file_type()%}",
-				" | ",
-				"%{%v:lua.file_size()%}",
-				"%=",
-				"%{%v:lua.diagnostics()%}",
-				"%l:%c  %P ",
-			}
-		end
-	})
-	vim.api.nvim_set_hl(0, "StatusLineBold", { bold = true })
-	vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave" }, {
-		callback = function()
-			vim.opt_local.statusline = "  %f %h%m%r │ %{v:lua.file_type()} | %=  %l:%c   %P "
-		end
-	})
-
-
-	vim.opt.cursorline = true
-
-	vim.api.nvim_create_autocmd("ModeChanged", {
-		callback = function()
-			local mode = vim.fn.mode()
-			if mode == "i" then
-				vim.api.nvim_set_hl(0, "CursorLine", { bg = "#252525" })
-				vim.api.nvim_set_hl(0, "StatusLine", { bg = "#303030", fg = "#ffffff" })
-			elseif mode == "v" or mode == "V" or mode == "\22" then
-				vim.api.nvim_set_hl(0, "CursorLine", { bg = "#3a3a3a" })
-				vim.api.nvim_set_hl(0, "StatusLine", { bg = "#454545", fg = "#ffffff" })
-			else
-				vim.api.nvim_set_hl(0, "CursorLine", { bg = "#1e1e1e" })
-				vim.api.nvim_set_hl(0, "StatusLine", { bg = "#2a2a2a", fg = "#ffffff" })
-			end
-		end,
-	})
-end
-
-setup_dynamic_statusline()
 
 -- [Copilot]
 require("copilot").setup({
