@@ -10,7 +10,8 @@ vim.keymap.set("v", "<", "<gv", { desc = "Indent left and reselect" })
 vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
 -- Playback macro in register with capital Q
 vim.keymap.set('n', 'Q', '@q', { desc = 'Play macro q' })
-
+-- Use jk to for Insert -> Normal in Terminal mode
+vim.keymap.set("t", "jk", [[<C-\><C-n>]], { noremap = true, silent = true })
 -- Highlight yanked text
 vim.api.nvim_create_autocmd("TextYankPost", {
 	group = augroup,
@@ -29,7 +30,7 @@ vim.o.number = true
 vim.o.relativenumber = true
 vim.o.confirm = true
 vim.o.tabstop = 4
-vim.o.shiftwidth = 4
+vim.o.shiftwidth = 5
 vim.o.smarttab = true
 vim.o.softtabstop = 4
 vim.o.scrolloff = 10
@@ -75,6 +76,79 @@ end, {
 
 vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
 
+-- [Terminal]
+local function open_term(opts)
+    opts = opts or {}
+    local fullscreen = opts.fullscreen or false
+
+    if fullscreen then
+        vim.cmd("tabnew | terminal")
+    else
+        vim.cmd("botright vsplit | terminal")
+        local width = math.floor(vim.o.columns * 0.35)
+        vim.api.nvim_win_set_width(0, width)
+    end
+
+    local buf = vim.api.nvim_get_current_buf()
+
+    -- Optional: make it look cleaner
+    vim.bo[buf].buflisted = false
+    vim.wo.number = false
+    vim.wo.relativenumber = false
+    vim.wo.signcolumn = "no"
+
+    -- Shift+Q: close the terminal window (works from terminal insert too)
+    vim.keymap.set("t", "Q", [[<C-\><C-n>:close<CR>]], { buffer = buf, noremap = true, silent = true })
+    vim.keymap.set("n", "Q", [[<cmd>close<CR>]], { buffer = buf, noremap = true, silent = true })
+
+    vim.cmd("startinsert")
+end
+
+vim.api.nvim_create_user_command("T", function()
+    open_term({ fullscreen = false })
+end, {})
+
+vim.api.nvim_create_user_command("Tf", function()
+    open_term({ fullscreen = true })
+end, {})
+
+-- [Tab + Terminal Workflow]
+-- Mimic tmux prefix (C-a) for tab operations
+local function map(mode, lhs, rhs, opts)
+    opts = opts or {}
+    opts.noremap = true
+    opts.silent = true
+    vim.keymap.set(mode, lhs, rhs, opts)
+end
+
+-- C-a as "prefix" - we'll use it directly in combos
+-- Tab navigation: C-a + h/l for prev/next tab
+map({'n', 't'}, '<C-a>h', '<cmd>tabprevious<CR>')
+map({'n', 't'}, '<C-a>l', '<cmd>tabnext<CR>')
+vim.keymap.set({'n', 't'}, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
+vim.keymap.set({'n', 't'}, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
+
+-- C-a + number to jump to tab (like tmux windows)
+for i = 1, 9 do
+    map({'n', 't'}, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
+end
+
+-- C-a + c to create new tab with terminal
+map({'n', 't'}, '<C-a>c', '<cmd>tabnew | terminal<CR>')
+
+-- C-a + x to close current tab
+map({'n', 't'}, '<C-a>x', '<cmd>tabclose<CR>')
+
+-- Split navigation with C-hjkl (works from terminal mode too)
+map('t', '<C-h>', [[<C-\><C-n><C-w>h]])
+map('t', '<C-j>', [[<C-\><C-n><C-w>j]])
+map('t', '<C-k>', [[<C-\><C-n><C-w>k]])
+map('t', '<C-l>', [[<C-\><C-n><C-w>l]])
+map('n', '<C-h>', '<C-w>h')
+map('n', '<C-j>', '<C-w>j')
+map('n', '<C-k>', '<C-w>k')
+map('n', '<C-l>', '<C-w>l')
+
 -- [Persistant undo directory]
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.expand("~/.vim/undodir")
@@ -110,8 +184,8 @@ Hydra({
 	mode = 'n',
 	body = '<C-w>',
 	heads = {
-		{ 'H',     '<cmd>vertical resize +5<cr>' },
-		{ 'L',     '<cmd>vertical resize -5<cr>' },
+		{ 'H',     '<cmd>vertical resize -5<cr>' },
+		{ 'L',     '<cmd>vertical resize +5<cr>' },
 		{ 'K',     '<cmd>resize +5<cr>' },
 		{ 'J',     '<cmd>resize -5<cr>' },
 		{ '<Esc>', nil,                          { exit = true, nowait = true } },
@@ -166,7 +240,7 @@ require("oil").setup({
 	},
 	use_default_keymaps = true,
 	view_options = {
-		show_hidden = false,
+		show_hidden = true,
 		is_hidden_file = function(name, bufnr)
 			return name:match("^%.") ~= nil
 		end,
@@ -388,6 +462,21 @@ vim.g.airline_section_y = ""
 vim.g.airline_section_z = "L:%l/%L C:%c"
 vim.g["airline#extensions#whitespace#enabled"] = 0
 
+-- Enable airline tabline
+vim.g["airline#extensions#tabline#enabled"] = 1
+vim.g["airline#extensions#tabline#tab_nr_type"] = 1
+vim.g["airline#extensions#tabline#show_tab_nr"] = 1
+vim.g["airline#extensions#tabline#tab_min_count"] = 1
+vim.g["airline#extensions#tabline#show_buffers"] = 0
+vim.g["airline#extensions#tabline#fnamemod"] = ':t'
+
+-- Custom tab label format
+vim.g["airline#extensions#tabline#tabtitle_formatter"] = 'TabNum'
+vim.cmd([[
+  function! TabNum(n)
+    return 'Tab ' . (a:n - 1)
+  endfunction
+]])
 -- force redraw once everything is loaded
 vim.cmd("silent! AirlineRefresh")
 
