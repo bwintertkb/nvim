@@ -104,11 +104,11 @@ local function open_term(opts)
     vim.cmd("startinsert")
 end
 
-vim.api.nvim_create_user_command("T", function()
+vim.api.nvim_create_user_command("t", function()
     open_term({ fullscreen = false })
 end, {})
 
-vim.api.nvim_create_user_command("Tf", function()
+vim.api.nvim_create_user_command("tf", function()
     open_term({ fullscreen = true })
 end, {})
 
@@ -326,6 +326,26 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.wo.concealcursor = "nvic"
 	end,
 })
+
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  callback = function()
+    if vim.bo.filetype == "oil" then
+      local dir = require("oil").get_current_dir()
+      if dir then
+        vim.cmd.lcd(dir)
+      end
+    end
+  end,
+})
+
+vim.keymap.set("n", "<leader>cd", function()
+  local dir = require("oil").get_current_dir()
+  if dir then
+    vim.cmd.lcd(dir)
+    print("lcd → " .. dir)
+  end
+end, { desc = "Oil: lcd into directory" })
 
 -- File explorer for all files with fzf
 -- Use fd instead
