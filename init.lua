@@ -104,11 +104,11 @@ local function open_term(opts)
     vim.cmd("startinsert")
 end
 
-vim.api.nvim_create_user_command("t", function()
+vim.api.nvim_create_user_command("T", function()
     open_term({ fullscreen = false })
 end, {})
 
-vim.api.nvim_create_user_command("tf", function()
+vim.api.nvim_create_user_command("TF", function()
     open_term({ fullscreen = true })
 end, {})
 
