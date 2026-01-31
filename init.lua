@@ -23,6 +23,24 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 -- [Cursor]
 -- Keep cursor a block in normal and insert mode
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
+vim.o.cursorline = true
+
+local normal_bg = "#1a1f20"
+local insert_bg = "#252a2b"
+
+vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
+
+vim.api.nvim_create_autocmd("InsertEnter", {
+    callback = function()
+        vim.api.nvim_set_hl(0, "CursorLine", { bg = insert_bg })
+    end,
+})
+
+vim.api.nvim_create_autocmd("InsertLeave", {
+    callback = function()
+        vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
+    end,
+})
 
 -- [Options]
 vim.o.clipboard = "unnamedplus"
