@@ -46,6 +46,7 @@ vim.opt.statuscolumn = ""
 -- Use ripgrep as grep default
 vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
+vim.o.autochdir = false
 
 -- [Shell]
 -- User command with completion and history
@@ -231,8 +232,8 @@ require("oil").setup({
 		["<C-l>"] = "actions.refresh",
 		["-"] = { "actions.parent", mode = "n" },
 		["_"] = { "actions.open_cwd", mode = "n" },
-		["`"] = { "actions.cd", mode = "n" },
-		["g~"] = { "actions.cd", opts = { scope = "tab" }, mode = "n" },
+		["`"] = false,  -- disabled to prevent cwd changes
+		["g~"] = false, -- disabled to prevent cwd changes
 		["gs"] = { "actions.change_sort", mode = "n" },
 		["gx"] = "actions.open_external",
 		["g."] = { "actions.toggle_hidden", mode = "n" },
@@ -327,25 +328,65 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
+-- [Project Root Management]
+-- Auto-detect project root on startup based on common markers
+local function find_project_root()
+	local markers = { '.git', 'Cargo.toml', 'package.json', 'Makefile', '.project_root' }
+	local path = vim.fn.expand('%:p:h')
+	if path == '' then path = vim.fn.getcwd() end
 
-vim.api.nvim_create_autocmd("BufEnter", {
-  callback = function()
-    if vim.bo.filetype == "oil" then
-      local dir = require("oil").get_current_dir()
-      if dir then
-        vim.cmd.lcd(dir)
-      end
-    end
-  end,
+	for _ = 1, 20 do -- max depth
+		for _, marker in ipairs(markers) do
+			if vim.fn.isdirectory(path .. '/' .. marker) == 1 or vim.fn.filereadable(path .. '/' .. marker) == 1 then
+				return path
+			end
+		end
+		local parent = vim.fn.fnamemodify(path, ':h')
+		if parent == path then break end
+		path = parent
+	end
+	return nil
+end
+
+-- Set project root on VimEnter
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		local root = find_project_root()
+		if root then
+			vim.g.project_root = root
+			vim.cmd("cd " .. vim.fn.fnameescape(root))
+		else
+			vim.g.project_root = vim.fn.getcwd()
+		end
+	end,
 })
 
-vim.keymap.set("n", "<leader>cd", function()
-  local dir = require("oil").get_current_dir()
-  if dir then
-    vim.cmd.lcd(dir)
-    print("lcd → " .. dir)
-  end
-end, { desc = "Oil: lcd into directory" })
+-- Manual commands
+vim.api.nvim_create_user_command("SetRoot", function()
+    local dir
+    if vim.bo.filetype == "oil" then
+        dir = require("oil").get_current_dir()
+    else
+        dir = vim.fn.expand('%:p:h')
+    end
+    if dir and dir ~= "" then
+        vim.g.project_root = dir
+        vim.cmd("cd " .. vim.fn.fnameescape(dir))
+        vim.notify("Project root: " .. dir)
+    end
+end, {})
+vim.keymap.set('n', '<leader>sd', '<cmd>SetRoot<CR>', { desc = 'set project root' })
+
+vim.api.nvim_create_user_command("CdRoot", function()
+	if vim.g.project_root then
+		vim.cmd("cd " .. vim.fn.fnameescape(vim.g.project_root))
+		vim.notify("cd " .. vim.g.project_root)
+	else
+		vim.notify("No project root set", vim.log.levels.WARN)
+	end
+end, {})
+
+vim.keymap.set('n', '<leader>cd', '<cmd>CdRoot<CR>', { desc = 'cd to project root' })
 
 -- File explorer for all files with fzf
 -- Use fd instead
