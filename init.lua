@@ -20,6 +20,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
+
 -- [Cursor]
 -- Keep cursor a block in normal and insert mode
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
@@ -65,6 +66,7 @@ vim.opt.statuscolumn = ""
 vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
 vim.o.autochdir = false
+vim.o.scrollback = 100000
 
 -- [Shell]
 -- User command with completion and history
@@ -189,7 +191,8 @@ vim.pack.add({
 	"https://github.com/bwintertkb/visual_wrap.nvim",
 	"https://github.com/zbirenbaum/copilot.lua",
 	"https://github.com/saghen/blink.cmp",
-	"https://github.com/giuxtaposition/blink-cmp-copilot",
+    "https://github.com/supermaven-inc/supermaven-nvim",
+    "https://github.com/Huijiro/blink-cmp-supermaven",
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/vim-airline/vim-airline",
 	"https://github.com/vim-airline/vim-airline-themes",
@@ -560,41 +563,25 @@ vim.cmd([[
 vim.cmd("silent! AirlineRefresh")
 
 
--- [Copilot]
-require("copilot").setup({
-	suggestion = { enabled = false }, -- disabled, using blink.cmp instead
-	panel = { enabled = true },
-	filetypes = {
-		markdown = true,
-		help = true,
-	},
+-- [Supermaven]
+require("supermaven-nvim").setup({
+    disable_inline_completion = true, -- Disable inline phantom text, let blink handle it
+    disable_keymaps = true,           -- We will manually bind the toggle
+    log_level = "off",
 })
 
--- Force disable on startup (silently)
-local original_notify = vim.notify
-vim.notify = function(...) end
-require("copilot.command").disable()
-vim.defer_fn(function()
-	vim.notify = original_notify
-end, 100)
-
--- Toggle function
-local function toggle_copilot()
-	local client = require("copilot.client")
-	local command = require("copilot.command")
-	if client.is_disabled() then
-		command.enable()
-		vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
-	else
-		command.disable()
-		vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
-	end
-	vim.defer_fn(function()
-		vim.api.nvim_echo({}, false, {})
-	end, 1500)
+local function toggle_supermaven()
+    local api = require("supermaven-nvim.api")
+    if api.is_running() then
+        api.stop()
+        vim.api.nvim_echo({ { "  Supermaven Disabled  ", "WarningMsg" } }, false, {})
+    else
+        api.start()
+        vim.api.nvim_echo({ { "  Supermaven Enabled  ", "MoreMsg" } }, false, {})
+    end
 end
 
-vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
+vim.keymap.set("n", "<M-g>", toggle_supermaven, { desc = "Toggle Supermaven" })
 
 -- [Completion with blink.cmp]
 require("blink.cmp").setup({
@@ -621,11 +608,11 @@ require("blink.cmp").setup({
 		ghost_text = { enabled = false },
 	},
 	sources = {
-		default = { 'lsp', 'copilot', 'path', 'buffer' },
+		default = { 'lsp', 'supermaven', 'path', 'buffer' },
 		providers = {
-			copilot = {
-				name = "copilot",
-				module = "blink-cmp-copilot",
+			supermaven = {
+				name = "supermaven",
+				module = "blink-cmp-supermaven",
 				score_offset = 100,
 				async = true,
 				transform_items = function(_, items)
