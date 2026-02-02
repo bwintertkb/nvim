@@ -189,10 +189,8 @@ vim.pack.add({
 	"https://github.com/windwp/nvim-autopairs",
 	"https://github.com/chrisgrieser/nvim-lsp-endhints",
 	"https://github.com/bwintertkb/visual_wrap.nvim",
-	"https://github.com/zbirenbaum/copilot.lua",
+	"https://github.com/supermaven-inc/supermaven-nvim",
 	"https://github.com/saghen/blink.cmp",
-    "https://github.com/supermaven-inc/supermaven-nvim",
-    "https://github.com/Huijiro/blink-cmp-supermaven",
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/vim-airline/vim-airline",
 	"https://github.com/vim-airline/vim-airline-themes",
@@ -564,12 +562,24 @@ vim.cmd("silent! AirlineRefresh")
 
 
 -- [Supermaven]
+-- Setup ghost text with <C-f> accept
 require("supermaven-nvim").setup({
-    disable_inline_completion = true, -- Disable inline phantom text, let blink handle it
-    disable_keymaps = true,           -- We will manually bind the toggle
+    keymaps = {
+        accept_suggestion = "<C-f>",
+        clear_suggestion = "<C-]>",
+        accept_word = "<C-j>",
+    },
+    ignore_filetypes = {},
+    color = {
+        suggestion_color = "#ffffff",
+        cterm = 244,
+    },
+    disable_inline_completion = false, 
+    disable_keymaps = false,
     log_level = "off",
 })
 
+-- Toggle function
 local function toggle_supermaven()
     local api = require("supermaven-nvim.api")
     if api.is_running() then
@@ -580,6 +590,8 @@ local function toggle_supermaven()
         vim.api.nvim_echo({ { "  Supermaven Enabled  ", "MoreMsg" } }, false, {})
     end
 end
+
+require("supermaven-nvim.api").stop()
 
 vim.keymap.set("n", "<M-g>", toggle_supermaven, { desc = "Toggle Supermaven" })
 
@@ -608,21 +620,7 @@ require("blink.cmp").setup({
 		ghost_text = { enabled = false },
 	},
 	sources = {
-		default = { 'lsp', 'supermaven', 'path', 'buffer' },
-		providers = {
-			supermaven = {
-				name = "supermaven",
-				module = "blink-cmp-supermaven",
-				score_offset = 100,
-				async = true,
-				transform_items = function(_, items)
-					for _, item in ipairs(items) do
-						item.kind_icon = "★"
-					end
-					return items
-				end,
-			},
-		},
+		default = { 'lsp', 'path', 'buffer' },
 	},
 	signature = { enabled = false },
 })
