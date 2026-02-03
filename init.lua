@@ -591,38 +591,44 @@ local function toggle_supermaven()
     end
 end
 
-require("supermaven-nvim.api").stop()
+vim.api.nvim_create_autocmd("VimEnter", {
+    callback = function()
+        require("supermaven-nvim.api").stop()
+    end,
+    once = true,
+})
 
 vim.keymap.set("n", "<M-g>", toggle_supermaven, { desc = "Toggle Supermaven" })
 
 -- [Completion with blink.cmp]
 require("blink.cmp").setup({
-	keymap = {
-		preset = 'default',
-		['<C-l>'] = { 'select_and_accept' },
-		['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
-		['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
-		['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
-		['<Space>'] = { 'accept', 'fallback' },
-	},
-	appearance = {
-		use_nvim_cmp_as_default = true,
-		nerd_font_variant = 'mono',
-	},
-	completion = {
-		list = {
-			selection = { preselect = false, auto_insert = true }
-		},
-		documentation = {
-			auto_show = false,
-			auto_show_delay_ms = 200,
-		},
-		ghost_text = { enabled = false },
-	},
-	sources = {
-		default = { 'lsp', 'path', 'buffer' },
-	},
-	signature = { enabled = false },
+    keymap = {
+        preset = 'default',
+        ['<C-l>'] = { 'select_and_accept' },
+        ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+        ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+        ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
+        ['<Space>'] = { 'accept', 'fallback' },
+    },
+    appearance = {
+        use_nvim_cmp_as_default = true,
+        nerd_font_variant = 'mono',
+    },
+    completion = {
+        list = {
+            selection = { preselect = false, auto_insert = true }
+        },
+        -- This controls the window you are seeing
+        documentation = {
+            auto_show = false,
+            auto_show_delay_ms = 200,
+        },
+        ghost_text = { enabled = false },
+    },
+    sources = {
+        default = { 'lsp', 'path', 'buffer' },
+    },
+    signature = { enabled = false },
 })
 
 -- [LSP CONFIG]
