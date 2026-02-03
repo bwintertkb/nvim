@@ -101,11 +101,20 @@ vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
 local function open_term(opts)
     opts = opts or {}
     local fullscreen = opts.fullscreen or false
+    local horizontal = opts.horizontal or false
 
     if fullscreen then
         vim.cmd("tabnew | terminal")
+    elseif horizontal then
+        -- Horizontal split (independent instance)
+        vim.cmd("botright new | terminal")
+        -- Set height to 30% of total lines
+        local height = math.floor(vim.o.lines * 0.3)
+        vim.api.nvim_win_set_height(0, height)
     else
-        vim.cmd("botright vsplit | terminal")
+        -- Vertical split (independent instance)
+        vim.cmd("botright vnew | terminal")
+        -- Set width to 35% of total columns
         local width = math.floor(vim.o.columns * 0.35)
         vim.api.nvim_win_set_width(0, width)
     end
@@ -131,6 +140,10 @@ end, {})
 
 vim.api.nvim_create_user_command("TF", function()
     open_term({ fullscreen = true })
+end, {})
+
+vim.api.nvim_create_user_command("TH", function()
+    open_term({ horizontal = true })
 end, {})
 
 -- [Tab + Terminal Workflow]
