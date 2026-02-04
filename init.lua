@@ -137,14 +137,17 @@ end
 vim.api.nvim_create_user_command("T", function()
     open_term({ fullscreen = false })
 end, {})
-
-vim.api.nvim_create_user_command("TF", function()
-    open_term({ fullscreen = true })
-end, {})
+vim.api.nvim_set_keymap('n', '<leader>tv', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
 
 vim.api.nvim_create_user_command("TH", function()
     open_term({ horizontal = true })
 end, {})
+vim.api.nvim_set_keymap('n', '<leader>th', '<CMD>:TH<CR>', { desc = 'open a horizontally split terminal' })
+
+vim.api.nvim_create_user_command("TF", function()
+    open_term({ fullscreen = true })
+end, {})
+vim.api.nvim_set_keymap('n', '<leader>tf', '<CMD>:TF<CR>', { desc = 'open a full screen terminal in full screen mode' })
 
 -- [Tab + Terminal Workflow]
 -- Mimic tmux prefix (C-a) for tab operations
