@@ -204,7 +204,9 @@ vim.pack.add({
 	"https://github.com/windwp/nvim-autopairs",
 	"https://github.com/chrisgrieser/nvim-lsp-endhints",
 	"https://github.com/bwintertkb/visual_wrap.nvim",
+	"https://github.com/nvim-lua/plenary.nvim",
 	"https://github.com/zbirenbaum/copilot.lua",
+	 "https://github.com/CopilotC-Nvim/CopilotChat.nvim",
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/vim-airline/vim-airline",
@@ -621,6 +623,24 @@ local function toggle_copilot()
 end
 
 vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
+
+-- [Copilot Chat]
+require("CopilotChat").setup({
+    model = "claude-opus-4.5",
+    mappings = {
+        reset = {
+            normal = "<C-x>",
+            insert = "<C-x>",
+        },
+    },
+})
+
+vim.keymap.set("n", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Toggle Copilot Chat" })
+vim.keymap.set("v", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Toggle Copilot Chat" })
+vim.keymap.set("n", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Explain code" })
+vim.keymap.set("v", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Explain selection" })
+vim.keymap.set("n", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix code" })
+vim.keymap.set("v", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix selection" })
 
 -- [Completion with blink.cmp]
 require("blink.cmp").setup({
