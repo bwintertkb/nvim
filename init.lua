@@ -20,7 +20,6 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
-
 -- [Cursor]
 -- Keep cursor a block in normal and insert mode
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
@@ -205,7 +204,7 @@ vim.pack.add({
 	"https://github.com/windwp/nvim-autopairs",
 	"https://github.com/chrisgrieser/nvim-lsp-endhints",
 	"https://github.com/bwintertkb/visual_wrap.nvim",
-	"https://github.com/supermaven-inc/supermaven-nvim",
+	"https://github.com/zbirenbaum/copilot.lua",
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/vim-airline/vim-airline",
@@ -577,44 +576,51 @@ vim.cmd([[
 vim.cmd("silent! AirlineRefresh")
 
 
--- [Supermaven]
--- Setup ghost text with <C-f> accept
-require("supermaven-nvim").setup({
-    keymaps = {
-        accept_suggestion = "<C-f>",
-        clear_suggestion = "<C-]>",
-        accept_word = "<C-j>",
+-- [Copilot]
+require("copilot").setup({
+    panel = {
+        enabled = false,
     },
-    ignore_filetypes = {},
-    color = {
-        suggestion_color = "#ffffff",
-        cterm = 244,
+    suggestion = {
+        enabled = true,
+        auto_trigger = true,
+        keymap = {
+            accept = "<C-f>",
+            accept_word = "<C-j>",
+            accept_line = false,
+            next = "<M-]>",
+            prev = "<M-[>",
+            dismiss = "<C-]>",
+        },
     },
-    disable_inline_completion = false, 
-    disable_keymaps = false,
-    log_level = "off",
+    filetypes = {
+        ["*"] = true,
+    },
 })
 
--- Toggle function
-local function toggle_supermaven()
-    local api = require("supermaven-nvim.api")
-    if api.is_running() then
-        api.stop()
-        vim.api.nvim_echo({ { "  Supermaven Disabled  ", "WarningMsg" } }, false, {})
-    else
-        api.start()
-        vim.api.nvim_echo({ { "  Supermaven Enabled  ", "MoreMsg" } }, false, {})
-    end
-end
-
+-- Start with Copilot disabled
 vim.api.nvim_create_autocmd("VimEnter", {
     callback = function()
-        require("supermaven-nvim.api").stop()
+        vim.defer_fn(function()
+            require("copilot.command").disable()
+        end, 100)
     end,
     once = true,
 })
 
-vim.keymap.set("n", "<M-g>", toggle_supermaven, { desc = "Toggle Supermaven" })
+-- Toggle function
+local function toggle_copilot()
+    local client = require("copilot.client")
+    if client.is_disabled() then
+        require("copilot.command").enable()
+        vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
+    else
+        require("copilot.command").disable()
+        vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
+    end
+end
+
+vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
 
 -- [Completion with blink.cmp]
 require("blink.cmp").setup({
