@@ -64,6 +64,10 @@
       "rev": "07d20fce48a5629686aefb0a7cd4b25e33947d50",
       "src": "https://github.com/supermaven-inc/supermaven-nvim"
     },
+    "telescope.nvim": {
+      "rev": "ad7d9580338354ccc136e5b8f0aa4f880434dcdc",
+      "src": "https://github.com/nvim-telescope/telescope.nvim"
+    },
     "vim-airline": {
       "rev": "b03fdc542f5155b54959102a2aecaf6c792dce01",
       "src": "https://github.com/vim-airline/vim-airline"

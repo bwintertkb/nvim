@@ -172,6 +172,7 @@ vim.pack.add({
 	"https://github.com/CopilotC-Nvim/CopilotChat.nvim",
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/nvimtools/hydra.nvim",
+	"https://github.com/nvim-telescope/telescope.nvim",
 })
 
 -- [Hydra] Pane resizing
@@ -283,66 +284,34 @@ end, {})
 
 vim.keymap.set('n', '<leader>cd', '<cmd>CdRoot<CR>', { desc = 'cd to project root' })
 
--- [Find / Grep / Recent — replaces fzf with fd + rg + quickfix]
+-- [Telescope - Find / Grep / Recent]
+require('telescope').setup({
+    defaults = {
+        file_ignore_patterns = { ".git/" },
+        layout_strategy = 'horizontal',
+    },
+    pickers = {
+        find_files = {
+			hidden = true,
+            no_ignore = true,
+        },
+        oldfiles = {
+            cwd_only = true,
+        },
+    },
+})
 
--- Helper: populate quickfix with file entries and open it
-local function files_to_qf(files, title)
-	local items = {}
-	for _, f in ipairs(files) do
-		table.insert(items, { filename = f, lnum = 1, col = 1, text = f })
-	end
-	vim.fn.setqflist({}, ' ', { title = title, items = items })
-	vim.cmd("copen")
-end
+local builtin = require('telescope.builtin')
 
--- C-p: find files with fd (fuzzy match)
-vim.keymap.set('n', '<C-p>', function()
-	local pattern = vim.fn.input("Find file: ")
-	if pattern == "" then return end
-	-- Convert to fuzzy regex: "mhl" -> "m.*h.*l"
-	local chars = {}
-	for i = 1, #pattern do
-		local c = pattern:sub(i, i)
-		-- Escape regex special chars
-		if c:match('[%.%^%$%*%+%-%?%(%)%[%]%{%}%|%\\]') then
-			c = '\\' .. c
-		end
-		table.insert(chars, c)
-	end
-	local fuzzy = table.concat(chars, ".*")
-	local files = vim.fn.systemlist('fd --type f --hidden --follow --exclude .git ' .. vim.fn.shellescape(fuzzy))
-	if #files == 0 then
-		vim.notify("No files found", vim.log.levels.WARN)
-		return
-	end
-	files_to_qf(files, 'Files: ' .. pattern)
-end, { desc = 'Find files' })
+-- C-p: find files (Telescope)
+vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Telescope find files' })
 
--- TAB: recent files in project (replaces fzf :History)
-vim.keymap.set('n', '<TAB>', function()
-	local cwd = vim.fn.getcwd() .. '/'
-	local recent = {}
-	for _, f in ipairs(vim.v.oldfiles) do
-		if #recent >= 30 then break end
-		if f:sub(1, #cwd) == cwd and vim.fn.filereadable(f) == 1 then
-			table.insert(recent, f:sub(#cwd + 1))
-		end
-	end
-	if #recent == 0 then
-		vim.notify("No recent files in project", vim.log.levels.WARN)
-		return
-	end
-	files_to_qf(recent, 'Recent files')
-end, { desc = 'Recent files' })
+-- TAB: recent files in project (Telescope)
+vim.keymap.set('n', '<TAB>', builtin.oldfiles, { desc = 'Telescope recent files' })
 
--- C-u: grep project (uses rg via grepprg, results in quickfix)
-vim.keymap.set('n', '<C-u>', function()
-	local pattern = vim.fn.input("Grep: ")
-	if pattern ~= "" then
-		vim.cmd("silent grep! " .. vim.fn.shellescape(pattern))
-		vim.cmd("copen")
-	end
-end, { desc = 'Grep project' })
+-- C-u: grep project (Telescope)
+vim.keymap.set('n', '<C-u>', builtin.live_grep, { desc = 'Telescope live grep' })
+
 
 -- [Quickfix behaviour]
 -- Tab/Shift-Tab to navigate, Enter to open (already default), q to close
