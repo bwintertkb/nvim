@@ -1,27 +1,21 @@
 vim.g.mapleader = " "
 
--- [Global general keymaps] Map jk as escape key in insert mode
+-- [Global general keymaps]
 vim.api.nvim_set_keymap('i', 'jk', '<ESC>', { noremap = true })
--- H goes to first non-blank character, L goes to end of line
 vim.api.nvim_set_keymap('n', 'H', '^', { noremap = true })
 vim.api.nvim_set_keymap('n', 'L', '$', { noremap = true })
--- Better indenting in visual mode (stay in visual mode after indent)
 vim.keymap.set("v", "<", "<gv", { desc = "Indent left and reselect" })
 vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
--- Playback macro in register with capital Q
 vim.keymap.set('n', 'Q', '@q', { desc = 'Play macro q' })
--- Use jk to for Insert -> Normal in Terminal mode
 vim.keymap.set("t", "jk", [[<C-\><C-n>]], { noremap = true, silent = true })
 -- Highlight yanked text
 vim.api.nvim_create_autocmd("TextYankPost", {
-	group = augroup,
 	callback = function()
 		vim.hl.on_yank()
 	end,
 })
 
 -- [Cursor]
--- Keep cursor a block in normal and insert mode
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
 vim.o.cursorline = true
 
@@ -48,27 +42,20 @@ vim.o.number = true
 vim.o.relativenumber = true
 vim.o.confirm = true
 vim.o.tabstop = 4
-vim.o.shiftwidth = 5
+vim.o.shiftwidth = 4
 vim.o.smarttab = true
 vim.o.softtabstop = 4
 vim.o.scrolloff = 10
-vim.o.wildmenu = true
-vim.o.wildmode = 'full'
-vim.o.encoding = "utf-8"
-vim.o.fileencoding = "utf-8"
-vim.o.autoindent = true
 vim.opt.hidden = true
 vim.opt.errorbells = false
 vim.opt.backspace = "indent,eol,start"
 vim.opt.statuscolumn = ""
--- Use ripgrep as grep default
 vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
 vim.o.autochdir = false
 vim.o.scrollback = 100000
 
 -- [Shell]
--- User command with completion and history
 vim.api.nvim_create_user_command("R", function(opts)
 	local output = vim.fn.systemlist(opts.args)
 	vim.cmd("botright 15new")
@@ -80,11 +67,9 @@ vim.api.nvim_create_user_command("R", function(opts)
 end, {
 	nargs = "+",
 	complete = function(arglead, cmdline, cursorpos)
-		-- Get file completions
 		local files = vim.fn.getcompletion(arglead, "file")
-		-- Get shell command completions (for first argument)
 		local parts = vim.split(cmdline, "%s+")
-		if #parts <= 2 then -- still on first arg (command name)
+		if #parts <= 2 then
 			local cmds = vim.fn.getcompletion(arglead, "shellcmd")
 			for _, cmd in ipairs(cmds) do
 				table.insert(files, cmd)
@@ -105,51 +90,38 @@ local function open_term(opts)
     if fullscreen then
         vim.cmd("tabnew | terminal")
     elseif horizontal then
-        -- Horizontal split (independent instance)
         vim.cmd("botright new | terminal")
-        -- Set height to 30% of total lines
         local height = math.floor(vim.o.lines * 0.3)
         vim.api.nvim_win_set_height(0, height)
     else
-        -- Vertical split (independent instance)
         vim.cmd("botright vnew | terminal")
-        -- Set width to 35% of total columns
         local width = math.floor(vim.o.columns * 0.35)
         vim.api.nvim_win_set_width(0, width)
     end
 
     local buf = vim.api.nvim_get_current_buf()
 
-    -- Optional: make it look cleaner
     vim.bo[buf].buflisted = false
     vim.wo.number = false
     vim.wo.relativenumber = false
     vim.wo.signcolumn = "no"
 
-    -- Shift+Q: close the terminal window (works from terminal insert too)
     vim.keymap.set("t", "Q", [[<C-\><C-n>:close<CR>]], { buffer = buf, noremap = true, silent = true })
     vim.keymap.set("n", "Q", [[<cmd>close<CR>]], { buffer = buf, noremap = true, silent = true })
 
     vim.cmd("startinsert")
 end
 
-vim.api.nvim_create_user_command("T", function()
-    open_term({ fullscreen = false })
-end, {})
+vim.api.nvim_create_user_command("T", function() open_term() end, {})
 vim.api.nvim_set_keymap('n', '<leader>tv', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
 
-vim.api.nvim_create_user_command("TH", function()
-    open_term({ horizontal = true })
-end, {})
+vim.api.nvim_create_user_command("TH", function() open_term({ horizontal = true }) end, {})
 vim.api.nvim_set_keymap('n', '<leader>th', '<CMD>:TH<CR>', { desc = 'open a horizontally split terminal' })
 
-vim.api.nvim_create_user_command("TF", function()
-    open_term({ fullscreen = true })
-end, {})
-vim.api.nvim_set_keymap('n', '<leader>tf', '<CMD>:TF<CR>', { desc = 'open a full screen terminal in full screen mode' })
+vim.api.nvim_create_user_command("TF", function() open_term({ fullscreen = true }) end, {})
+vim.api.nvim_set_keymap('n', '<leader>tf', '<CMD>:TF<CR>', { desc = 'open a full screen terminal' })
 
 -- [Tab + Terminal Workflow]
--- Mimic tmux prefix (C-a) for tab operations
 local function map(mode, lhs, rhs, opts)
     opts = opts or {}
     opts.noremap = true
@@ -157,25 +129,18 @@ local function map(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, opts)
 end
 
--- C-a as "prefix" - we'll use it directly in combos
--- Tab navigation: C-a + h/l for prev/next tab
 map({'n', 't'}, '<C-a>h', '<cmd>tabprevious<CR>')
 map({'n', 't'}, '<C-a>l', '<cmd>tabnext<CR>')
 vim.keymap.set({'n', 't'}, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
 vim.keymap.set({'n', 't'}, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
 
--- C-a + number to jump to tab (like tmux windows)
 for i = 1, 9 do
     map({'n', 't'}, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
 end
 
--- C-a + c to create new tab with terminal
 map({'n', 't'}, '<C-a>c', '<cmd>tabnew | terminal<CR>')
-
--- C-a + x to close current tab
 map({'n', 't'}, '<C-a>x', '<cmd>tabclose<CR>')
 
--- Split navigation with C-hjkl (works from terminal mode too)
 map('t', '<C-h>', [[<C-\><C-n><C-w>h]])
 map('t', '<C-j>', [[<C-\><C-n><C-w>j]])
 map('t', '<C-k>', [[<C-\><C-n><C-w>k]])
@@ -199,19 +164,14 @@ vim.pack.add({
 	"https://github.com/nvim-treesitter/nvim-treesitter",
 	"https://github.com/y9san9/y9nika.nvim",
 	"https://github.com/stevearc/oil.nvim",
-	"https://github.com/junegunn/fzf",
-	"https://github.com/junegunn/fzf.vim",
 	"https://github.com/windwp/nvim-autopairs",
 	"https://github.com/chrisgrieser/nvim-lsp-endhints",
 	"https://github.com/bwintertkb/visual_wrap.nvim",
 	"https://github.com/nvim-lua/plenary.nvim",
 	"https://github.com/zbirenbaum/copilot.lua",
-	 "https://github.com/CopilotC-Nvim/CopilotChat.nvim",
+	"https://github.com/CopilotC-Nvim/CopilotChat.nvim",
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/nvimtools/hydra.nvim",
-	"https://github.com/vim-airline/vim-airline",
-	"https://github.com/vim-airline/vim-airline-themes",
-	"https://github.com/tpope/vim-fugitive",
 })
 
 -- [Hydra] Pane resizing
@@ -232,12 +192,7 @@ Hydra({
 -- [File explorer]
 require("oil").setup({
 	default_file_explorer = true,
-	columns = {
-	},
-	buf_options = {
-		buflisted = false,
-		bufhidden = "hide",
-	},
+	columns = {},
 	win_options = {
 		statuscolumn = "",
 		signcolumn = "no",
@@ -246,109 +201,16 @@ require("oil").setup({
 		conceallevel = 3,
 		concealcursor = "nvic",
 	},
-	delete_to_trash = false,
-	skip_confirm_for_simple_edits = false,
-	prompt_save_on_select_new_entry = true,
-	cleanup_delay_ms = 2000,
-	lsp_file_methods = {
-		enabled = true,
-		timeout_ms = 1000,
-		autosave_changes = false,
-	},
-	constrain_cursor = "editable",
-	watch_for_changes = false,
 	keymaps = {
-		["g?"] = { "actions.show_help", mode = "n" },
-		["<CR>"] = "actions.select",
-		["<C-s>"] = { "actions.select", opts = { vertical = true } },
-		["<C-h>"] = { "actions.select", opts = { horizontal = true } },
-		["<C-t>"] = { "actions.select", opts = { tab = true } },
-		["<C-p>"] = "actions.preview",
-		["<C-c>"] = { "actions.close", mode = "n" },
-		["<C-l>"] = "actions.refresh",
-		["-"] = { "actions.parent", mode = "n" },
-		["_"] = { "actions.open_cwd", mode = "n" },
-		["`"] = false,  -- disabled to prevent cwd changes
-		["g~"] = false, -- disabled to prevent cwd changes
-		["gs"] = { "actions.change_sort", mode = "n" },
-		["gx"] = "actions.open_external",
-		["g."] = { "actions.toggle_hidden", mode = "n" },
-		["g\\"] = { "actions.toggle_trash", mode = "n" },
+		["`"] = false,
+		["g~"] = false,
 	},
-	use_default_keymaps = true,
 	view_options = {
 		show_hidden = true,
-		is_hidden_file = function(name, bufnr)
-			return name:match("^%.") ~= nil
-		end,
-		is_always_hidden = function(name, bufnr)
-			return false
-		end,
-		natural_order = "fast",
-		case_insensitive = false,
 		sort = {
 			{ "type", "asc" },
 			{ "name", "asc" },
 		},
-		highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
-			return nil
-		end,
-	},
-	extra_scp_args = {},
-	extra_s3_args = {},
-	git = {
-		add = function(path) return false end,
-		mv = function(src_path, dest_path) return false end,
-		rm = function(path) return false end,
-	},
-	float = {
-		padding = 2,
-		max_width = 0,
-		max_height = 0,
-		border = nil,
-		win_options = {
-			winblend = 0,
-		},
-		get_win_title = nil,
-		preview_split = "auto",
-		override = function(conf) return conf end,
-	},
-	preview_win = {
-		update_on_cursor_moved = true,
-		preview_method = "fast_scratch",
-		disable_preview = function(filename) return false end,
-		win_options = {},
-	},
-	confirmation = {
-		max_width = 0.9,
-		min_width = { 40, 0.4 },
-		width = nil,
-		max_height = 0.9,
-		min_height = { 5, 0.1 },
-		height = nil,
-		border = nil,
-		win_options = {
-			winblend = 0,
-		},
-	},
-	progress = {
-		max_width = 0.9,
-		min_width = { 40, 0.4 },
-		width = nil,
-		max_height = { 10, 0.9 },
-		min_height = { 5, 0.1 },
-		height = nil,
-		border = nil,
-		minimized_border = "none",
-		win_options = {
-			winblend = 0,
-		},
-	},
-	ssh = {
-		border = nil,
-	},
-	keymaps_help = {
-		border = nil,
 	},
 })
 
@@ -365,13 +227,12 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- [Project Root Management]
--- Auto-detect project root on startup based on common markers
 local function find_project_root()
 	local markers = { '.git', 'Cargo.toml', 'package.json', 'Makefile', '.project_root' }
 	local path = vim.fn.expand('%:p:h')
 	if path == '' then path = vim.fn.getcwd() end
 
-	for _ = 1, 20 do -- max depth
+	for _ = 1, 20 do
 		for _, marker in ipairs(markers) do
 			if vim.fn.isdirectory(path .. '/' .. marker) == 1 or vim.fn.filereadable(path .. '/' .. marker) == 1 then
 				return path
@@ -384,7 +245,6 @@ local function find_project_root()
 	return nil
 end
 
--- Set project root on VimEnter
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		local root = find_project_root()
@@ -397,7 +257,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
 	end,
 })
 
--- Manual commands
 vim.api.nvim_create_user_command("SetRoot", function()
     local dir
     if vim.bo.filetype == "oil" then
@@ -424,26 +283,97 @@ end, {})
 
 vim.keymap.set('n', '<leader>cd', '<cmd>CdRoot<CR>', { desc = 'cd to project root' })
 
--- File explorer for all files with fzf
--- Use fd instead
--- File explorer for all files with fzf
-vim.env.FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --exclude .git'
-vim.env.FZF_DEFAULT_OPTS = '--bind=tab:up,shift-tab:down'
-vim.g.fzf_layout = { down = '35%' }
+-- [Find / Grep / Recent — replaces fzf with fd + rg + quickfix]
 
-vim.keymap.set('n', '<C-p>', '<CMD>Files<CR>', {
-	desc = 'Find files (fzf)'
+-- Helper: populate quickfix with file entries and open it
+local function files_to_qf(files, title)
+	local items = {}
+	for _, f in ipairs(files) do
+		table.insert(items, { filename = f, lnum = 1, col = 1, text = f })
+	end
+	vim.fn.setqflist({}, ' ', { title = title, items = items })
+	vim.cmd("copen")
+end
+
+-- C-p: find files with fd (fuzzy match)
+vim.keymap.set('n', '<C-p>', function()
+	local pattern = vim.fn.input("Find file: ")
+	if pattern == "" then return end
+	-- Convert to fuzzy regex: "mhl" -> "m.*h.*l"
+	local chars = {}
+	for i = 1, #pattern do
+		local c = pattern:sub(i, i)
+		-- Escape regex special chars
+		if c:match('[%.%^%$%*%+%-%?%(%)%[%]%{%}%|%\\]') then
+			c = '\\' .. c
+		end
+		table.insert(chars, c)
+	end
+	local fuzzy = table.concat(chars, ".*")
+	local files = vim.fn.systemlist('fd --type f --hidden --follow --exclude .git ' .. vim.fn.shellescape(fuzzy))
+	if #files == 0 then
+		vim.notify("No files found", vim.log.levels.WARN)
+		return
+	end
+	files_to_qf(files, 'Files: ' .. pattern)
+end, { desc = 'Find files' })
+
+-- TAB: recent files in project (replaces fzf :History)
+vim.keymap.set('n', '<TAB>', function()
+	local cwd = vim.fn.getcwd() .. '/'
+	local recent = {}
+	for _, f in ipairs(vim.v.oldfiles) do
+		if #recent >= 30 then break end
+		if f:sub(1, #cwd) == cwd and vim.fn.filereadable(f) == 1 then
+			table.insert(recent, f:sub(#cwd + 1))
+		end
+	end
+	if #recent == 0 then
+		vim.notify("No recent files in project", vim.log.levels.WARN)
+		return
+	end
+	files_to_qf(recent, 'Recent files')
+end, { desc = 'Recent files' })
+
+-- C-u: grep project (uses rg via grepprg, results in quickfix)
+vim.keymap.set('n', '<C-u>', function()
+	local pattern = vim.fn.input("Grep: ")
+	if pattern ~= "" then
+		vim.cmd("silent grep! " .. vim.fn.shellescape(pattern))
+		vim.cmd("copen")
+	end
+end, { desc = 'Grep project' })
+
+-- [Quickfix behaviour]
+-- Tab/Shift-Tab to navigate, Enter to open (already default), q to close
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "qf",
+	callback = function(ev)
+		local buf = ev.buf
+		vim.keymap.set('n', '<TAB>', 'j', { buffer = buf, noremap = true, silent = true })
+		vim.keymap.set('n', '<S-TAB>', 'k', { buffer = buf, noremap = true, silent = true })
+		vim.keymap.set('n', 'q', '<cmd>cclose<CR>', { buffer = buf, noremap = true, silent = true })
+	end,
 })
-vim.keymap.set('n', '<TAB>', '<CMD>History<CR>', {
-	desc = 'Recent files (fzf)'
-})
-vim.keymap.set('n', '<C-u>', '<CMD>Rg<CR>', { desc = 'Grep project' })
+
+-- Quickfix navigation + toggle
+vim.keymap.set('n', ']q', '<cmd>cnext<CR>zz', { desc = 'Next quickfix' })
+vim.keymap.set('n', '[q', '<cmd>cprev<CR>zz', { desc = 'Prev quickfix' })
+vim.keymap.set('n', '<leader>o', function()
+	local wins = vim.fn.getwininfo()
+	for _, win in ipairs(wins) do
+		if win.quickfix == 1 then
+			vim.cmd("cclose")
+			return
+		end
+	end
+	vim.cmd("copen")
+end, { desc = 'Toggle quickfix' })
 
 -- [Visual wrap]
 require("visual_wrap").setup()
 
 -- [Theme]
--- Treesitter highlights
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "*",
 	callback = function()
@@ -474,14 +404,11 @@ require("y9nika.core").apply {
 	secondary = "#95cb82",
 	muted = "#aaaaaa",
 	marker = "#dfdf8e",
-
 }
 
--- Numbers: stand out, but calm
 vim.api.nvim_set_hl(0, "Number", { fg = "#9fb4c7" })
 vim.api.nvim_set_hl(0, "Float", { fg = "#9fb4c7" })
 vim.api.nvim_set_hl(0, "Boolean", { fg = "#9fb4c7" })
--- Comments: neutral grey
 vim.api.nvim_set_hl(0, "Comment", { fg = "#8a8f93" })
 
 local hl = vim.api.nvim_set_hl
@@ -544,39 +471,50 @@ require("lsp-endhints").setup({
 	autoEnableHints = true,
 })
 
+-- [Statusline — native, replaces airline + fugitive]
+local cached_branch = ""
 
--- [Statusline]
-vim.g.airline_theme = "minimalist"
-vim.g.airline_powerline_fonts = 0
-vim.g["airline#extensions#branch#enabled"] = 1
-vim.g.airline_section_b = "%{airline#extensions#branch#get_head()}"
-vim.g.airline_section_b = "%{FugitiveHead()}"
-vim.g.airline_left_sep = ""
-vim.g.airline_right_sep = ""
-vim.g.airline_left_alt_sep = ""
-vim.g.airline_right_alt_sep = ""
-vim.g.airline_section_y = ""
-vim.g.airline_section_z = "L:%l/%L C:%c"
-vim.g["airline#extensions#whitespace#enabled"] = 0
+local function update_git_branch()
+	local branch = vim.fn.system("git rev-parse --abbrev-ref HEAD 2>/dev/null"):gsub("\n", "")
+	if vim.v.shell_error ~= 0 then
+		cached_branch = ""
+	else
+		cached_branch = " " .. branch .. " |"
+	end
+end
 
--- Enable airline tabline
-vim.g["airline#extensions#tabline#enabled"] = 1
-vim.g["airline#extensions#tabline#tab_nr_type"] = 1
-vim.g["airline#extensions#tabline#show_tab_nr"] = 1
-vim.g["airline#extensions#tabline#tab_min_count"] = 1
-vim.g["airline#extensions#tabline#show_buffers"] = 0
-vim.g["airline#extensions#tabline#fnamemod"] = ':t'
+vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
+	callback = update_git_branch,
+})
 
--- Custom tab label format
-vim.g["airline#extensions#tabline#tabtitle_formatter"] = 'TabNum'
-vim.cmd([[
-  function! TabNum(n)
-    return 'Tab ' . (a:n - 1)
-  endfunction
-]])
--- force redraw once everything is loaded
-vim.cmd("silent! AirlineRefresh")
+function StatusLine()
+	return table.concat({
+		" %f",
+		" %m",
+		cached_branch,
+		"%=",
+		" L:%l/%L C:%c ",
+	})
+end
 
+vim.o.statusline = "%{%v:lua.StatusLine()%}"
+
+-- Tabline (0-indexed tab numbers to match C-a workflow)
+vim.o.showtabline = 2
+
+function TabLine()
+	local s = ""
+	for i = 1, vim.fn.tabpagenr("$") do
+		local is_sel = (i == vim.fn.tabpagenr())
+		s = s .. (is_sel and "%#TabLineSel#" or "%#TabLine#")
+		s = s .. " %" .. i .. "T"
+		s = s .. " Tab " .. (i - 1) .. " "
+	end
+	s = s .. "%#TabLineFill#"
+	return s
+end
+
+vim.o.tabline = "%!v:lua.TabLine()"
 
 -- [Copilot]
 require("copilot").setup({
@@ -610,7 +548,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
     once = true,
 })
 
--- Toggle function
 local function toggle_copilot()
     local client = require("copilot.client")
     if client.is_disabled() then
@@ -660,7 +597,6 @@ require("blink.cmp").setup({
         list = {
             selection = { preselect = false, auto_insert = true }
         },
-        -- This controls the window you are seeing
         documentation = {
             auto_show = false,
             auto_show_delay_ms = 200,
@@ -674,12 +610,10 @@ require("blink.cmp").setup({
 })
 
 -- [LSP CONFIG]
--- On attach: enable inlay hints
 vim.api.nvim_create_autocmd('LspAttach', {
 	callback = function(args)
 		local client = vim.lsp.get_client_by_id(args.data.client_id)
 
-		-- Inlay hints
 		if client and client:supports_method('textDocument/inlayHint') then
 			vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
 		end
@@ -690,7 +624,6 @@ vim.keymap.set('n', '<leader>h', function()
 	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }))
 end, { desc = 'Toggle inlay hints' })
 
--- Keymaps
 vim.keymap.set('n', 'gR', '<cmd>lua vim.lsp.buf.rename()<cr>')
 vim.keymap.set('n', '<c-]>', '<cmd>lua vim.lsp.buf.definition()<cr>')
 vim.keymap.set('n', '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
@@ -709,8 +642,7 @@ vim.keymap.set('n', '<leader>d', '<cmd>lua vim.diagnostic.open_float()<cr>')
 vim.keymap.set('n', '<leader>q', '<cmd>lua vim.diagnostic.setqflist()<cr>')
 vim.keymap.set('n', '<leader>p', '<cmd>lua vim.lsp.buf.format()<cr>')
 
--- Format using LSP
--- If LSP does not support formatting, fall back to external formatter
+-- Format using LSP, fall back to external formatter
 local formatters = {
 	python = "black -q -",
 	rust = "rustfmt",
@@ -732,7 +664,6 @@ local function formatter_exists(cmd)
 end
 
 vim.keymap.set('n', '<leader>f', function()
-	-- Try LSP first
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	for _, client in ipairs(clients) do
 		if client:supports_method('textDocument/formatting') then
@@ -741,7 +672,6 @@ vim.keymap.set('n', '<leader>f', function()
 		end
 	end
 
-	-- Fall back to external formatter
 	local ft = vim.bo.filetype
 	local formatter = formatters[ft]
 
@@ -820,9 +750,7 @@ vim.lsp.config('lua_ls', {
 
 		client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
 			runtime = {
-				-- Neovim uses LuaJIT
 				version = 'LuaJIT',
-				-- Same module resolution style as Neovim
 				path = {
 					'lua/?.lua',
 					'lua/?/init.lua',
@@ -832,7 +760,6 @@ vim.lsp.config('lua_ls', {
 				checkThirdParty = false,
 				library = {
 					vim.env.VIMRUNTIME,
-					-- optional but often helpful when editing your config
 					vim.fn.stdpath('config'),
 				},
 			},
