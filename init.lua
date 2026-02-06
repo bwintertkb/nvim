@@ -486,13 +486,16 @@ end
 vim.o.tabline = "%!v:lua.TabLine()"
 
 -- [Copilot]
+-- NOTE: auto_trigger starts false so suggestions are off by default.
+-- Toggle with <M-g> flips auto_trigger without restarting the LSP client,
+-- which avoids the "Agent service not initialized" errors from stale listeners.
 require("copilot").setup({
     panel = {
         enabled = false,
     },
     suggestion = {
         enabled = true,
-        auto_trigger = true,
+        auto_trigger = false,
         keymap = {
             accept = "<C-f>",
             accept_word = "<C-j>",
@@ -507,23 +510,16 @@ require("copilot").setup({
     },
 })
 
--- Start with Copilot disabled
-vim.api.nvim_create_autocmd("VimEnter", {
-    callback = function()
-        vim.defer_fn(function()
-            require("copilot.command").disable()
-        end, 100)
-    end,
-    once = true,
-})
+local copilot_enabled = false
 
 local function toggle_copilot()
-    local client = require("copilot.client")
-    if client.is_disabled() then
-        require("copilot.command").enable()
+    local suggestion = require("copilot.suggestion")
+    suggestion.toggle_auto_trigger()
+    copilot_enabled = not copilot_enabled
+    if copilot_enabled then
         vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
     else
-        require("copilot.command").disable()
+        suggestion.dismiss()
         vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
     end
 end
