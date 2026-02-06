@@ -442,6 +442,9 @@ require("lsp-endhints").setup({
 
 -- [Statusline — native, replaces airline + fugitive]
 local cached_branch = ""
+-- Copilot status variable declared lower down, but we access it globally
+-- (technically relies on scope, but we'll declare it at file level if needed,
+-- but since function is global it works if copilot_enabled is visible)
 
 local function update_git_branch()
 	local branch = vim.fn.system("git rev-parse --abbrev-ref HEAD 2>/dev/null"):gsub("\n", "")
@@ -456,12 +459,20 @@ vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
 	callback = update_git_branch,
 })
 
+-- We need to access copilot_enabled from here. It is defined below.
+-- To make this clean in a single pass, we can assume copilot_enabled is global
+-- or move the definition up. For this file, I will just access the variable.
+-- *Note: copilot_enabled is local below. Moving definition up.*
+local copilot_enabled = false
+
 function StatusLine()
+    local copilot_status = copilot_enabled and " [CP] " or ""
 	return table.concat({
 		" %f",
 		" %m",
 		cached_branch,
 		"%=",
+        copilot_status,
 		" L:%l/%L C:%c ",
 	})
 end
@@ -510,18 +521,24 @@ require("copilot").setup({
     },
 })
 
-local copilot_enabled = false
+-- copilot_enabled defined near statusline to allow access
 
 local function toggle_copilot()
-    local suggestion = require("copilot.suggestion")
-    suggestion.toggle_auto_trigger()
     copilot_enabled = not copilot_enabled
+    
+    -- 1. Toggle for current buffer
+    require("copilot.suggestion").toggle_auto_trigger()
+    
+    -- 2. Force setting for future buffers
+    require("copilot.config").get("suggestion").auto_trigger = copilot_enabled
+
     if copilot_enabled then
         vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
     else
-        suggestion.dismiss()
         vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
     end
+    -- Redraw statusline
+    vim.cmd('redrawstatus')
 end
 
 vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
