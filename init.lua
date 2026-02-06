@@ -25,15 +25,15 @@ local insert_bg = "#252a2b"
 vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
 
 vim.api.nvim_create_autocmd("InsertEnter", {
-    callback = function()
-        vim.api.nvim_set_hl(0, "CursorLine", { bg = insert_bg })
-    end,
+	callback = function()
+		vim.api.nvim_set_hl(0, "CursorLine", { bg = insert_bg })
+	end,
 })
 
 vim.api.nvim_create_autocmd("InsertLeave", {
-    callback = function()
-        vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
-    end,
+	callback = function()
+		vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
+	end,
 })
 
 -- [Options]
@@ -83,37 +83,37 @@ vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
 
 -- [Terminal]
 local function open_term(opts)
-    opts = opts or {}
-    local fullscreen = opts.fullscreen or false
-    local horizontal = opts.horizontal or false
+	opts = opts or {}
+	local fullscreen = opts.fullscreen or false
+	local horizontal = opts.horizontal or false
 
-    if fullscreen then
-        vim.cmd("tabnew | terminal")
-    elseif horizontal then
-        vim.cmd("botright new | terminal")
-        local height = math.floor(vim.o.lines * 0.3)
-        vim.api.nvim_win_set_height(0, height)
-    else
-        vim.cmd("botright vnew | terminal")
-        local width = math.floor(vim.o.columns * 0.35)
-        vim.api.nvim_win_set_width(0, width)
-    end
+	if fullscreen then
+		vim.cmd("tabnew | terminal")
+	elseif horizontal then
+		vim.cmd("botright new | terminal")
+		local height = math.floor(vim.o.lines * 0.3)
+		vim.api.nvim_win_set_height(0, height)
+	else
+		vim.cmd("botright vnew | terminal")
+		local width = math.floor(vim.o.columns * 0.35)
+		vim.api.nvim_win_set_width(0, width)
+	end
 
-    local buf = vim.api.nvim_get_current_buf()
+	local buf = vim.api.nvim_get_current_buf()
 
-    vim.bo[buf].buflisted = false
-    vim.wo.number = false
-    vim.wo.relativenumber = false
-    vim.wo.signcolumn = "no"
+	vim.bo[buf].buflisted = false
+	vim.wo.number = false
+	vim.wo.relativenumber = false
+	vim.wo.signcolumn = "no"
 
-    vim.keymap.set("t", "Q", [[<C-\><C-n>:close<CR>]], { buffer = buf, noremap = true, silent = true })
-    vim.keymap.set("n", "Q", [[<cmd>close<CR>]], { buffer = buf, noremap = true, silent = true })
+	vim.keymap.set("t", "Q", [[<C-\><C-n>:close<CR>]], { buffer = buf, noremap = true, silent = true })
+	vim.keymap.set("n", "Q", [[<cmd>close<CR>]], { buffer = buf, noremap = true, silent = true })
 
-    vim.cmd("startinsert")
+	vim.cmd("startinsert")
 end
 
 vim.api.nvim_create_user_command("T", function() open_term() end, {})
-vim.api.nvim_set_keymap('n', '<leader>tk', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
+vim.api.nvim_set_keymap('n', '<leader>tv', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
 
 vim.api.nvim_create_user_command("TH", function() open_term({ horizontal = true }) end, {})
 vim.api.nvim_set_keymap('n', '<leader>th', '<CMD>:TH<CR>', { desc = 'open a horizontally split terminal' })
@@ -123,23 +123,23 @@ vim.api.nvim_set_keymap('n', '<leader>tf', '<CMD>:TF<CR>', { desc = 'open a full
 
 -- [Tab + Terminal Workflow]
 local function map(mode, lhs, rhs, opts)
-    opts = opts or {}
-    opts.noremap = true
-    opts.silent = true
-    vim.keymap.set(mode, lhs, rhs, opts)
+	opts = opts or {}
+	opts.noremap = true
+	opts.silent = true
+	vim.keymap.set(mode, lhs, rhs, opts)
 end
 
-map({'n', 't'}, '<C-a>h', '<cmd>tabprevious<CR>')
-map({'n', 't'}, '<C-a>l', '<cmd>tabnext<CR>')
-vim.keymap.set({'n', 't'}, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
-vim.keymap.set({'n', 't'}, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
+map({ 'n', 't' }, '<C-a>h', '<cmd>tabprevious<CR>')
+map({ 'n', 't' }, '<C-a>l', '<cmd>tabnext<CR>')
+vim.keymap.set({ 'n', 't' }, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
+vim.keymap.set({ 'n', 't' }, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
 
 for i = 1, 9 do
-    map({'n', 't'}, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
+	map({ 'n', 't' }, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
 end
 
-map({'n', 't'}, '<C-a>c', '<cmd>tabnew | terminal<CR>')
-map({'n', 't'}, '<C-a>x', '<cmd>tabclose<CR>')
+map({ 'n', 't' }, '<C-a>c', '<cmd>tabnew | terminal<CR>')
+map({ 'n', 't' }, '<C-a>x', '<cmd>tabclose<CR>')
 
 map('t', '<C-h>', [[<C-\><C-n><C-w>h]])
 map('t', '<C-j>', [[<C-\><C-n><C-w>j]])
@@ -259,17 +259,17 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 vim.api.nvim_create_user_command("SetRoot", function()
-    local dir
-    if vim.bo.filetype == "oil" then
-        dir = require("oil").get_current_dir()
-    else
-        dir = vim.fn.expand('%:p:h')
-    end
-    if dir and dir ~= "" then
-        vim.g.project_root = dir
-        vim.cmd("cd " .. vim.fn.fnameescape(dir))
-        vim.notify("Project root: " .. dir)
-    end
+	local dir
+	if vim.bo.filetype == "oil" then
+		dir = require("oil").get_current_dir()
+	else
+		dir = vim.fn.expand('%:p:h')
+	end
+	if dir and dir ~= "" then
+		vim.g.project_root = dir
+		vim.cmd("cd " .. vim.fn.fnameescape(dir))
+		vim.notify("Project root: " .. dir)
+	end
 end, {})
 vim.keymap.set('n', '<leader>sd', '<cmd>SetRoot<CR>', { desc = 'set project root' })
 
@@ -286,19 +286,19 @@ vim.keymap.set('n', '<leader>cd', '<cmd>CdRoot<CR>', { desc = 'cd to project roo
 
 -- [Telescope - Find / Grep / Recent]
 require('telescope').setup({
-    defaults = {
-        file_ignore_patterns = { ".git/" },
-        layout_strategy = 'horizontal',
-    },
-    pickers = {
-        find_files = {
+	defaults = {
+		file_ignore_patterns = { ".git/" },
+		layout_strategy = 'horizontal',
+	},
+	pickers = {
+		find_files = {
 			hidden = true,
-            no_ignore = false,
-        },
-        oldfiles = {
-            cwd_only = true,
-        },
-    },
+			no_ignore = false,
+		},
+		oldfiles = {
+			cwd_only = true,
+		},
+	},
 })
 
 local builtin = require('telescope.builtin')
@@ -440,11 +440,9 @@ require("lsp-endhints").setup({
 	autoEnableHints = true,
 })
 
--- [Statusline — native, replaces airline + fugitive]
+-- [Statusline]
 local cached_branch = ""
--- Copilot status variable declared lower down, but we access it globally
--- (technically relies on scope, but we'll declare it at file level if needed,
--- but since function is global it works if copilot_enabled is visible)
+vim.g.copilot_enabled = false -- Initialize global variable
 
 local function update_git_branch()
 	local branch = vim.fn.system("git rev-parse --abbrev-ref HEAD 2>/dev/null"):gsub("\n", "")
@@ -459,27 +457,22 @@ vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
 	callback = update_git_branch,
 })
 
--- We need to access copilot_enabled from here. It is defined below.
--- To make this clean in a single pass, we can assume copilot_enabled is global
--- or move the definition up. For this file, I will just access the variable.
--- *Note: copilot_enabled is local below. Moving definition up.*
-local copilot_enabled = false
-
 function StatusLine()
-    local copilot_status = copilot_enabled and " [CP] " or ""
+	-- Access global variable directly
+	local copilot_status = vim.g.copilot_enabled and " [CP] " or ""
 	return table.concat({
 		" %f",
 		" %m",
 		cached_branch,
 		"%=",
-        copilot_status,
+		copilot_status,
 		" L:%l/%L C:%c ",
 	})
 end
 
 vim.o.statusline = "%{%v:lua.StatusLine()%}"
 
--- Tabline (0-indexed tab numbers to match C-a workflow)
+-- Tabline
 vim.o.showtabline = 2
 
 function TabLine()
@@ -497,61 +490,61 @@ end
 vim.o.tabline = "%!v:lua.TabLine()"
 
 -- [Copilot]
--- NOTE: auto_trigger starts false so suggestions are off by default.
--- Toggle with <M-g> flips auto_trigger without restarting the LSP client,
--- which avoids the "Agent service not initialized" errors from stale listeners.
 require("copilot").setup({
-    panel = {
-        enabled = false,
-    },
-    suggestion = {
-        enabled = true,
-        auto_trigger = false,
-        keymap = {
-            accept = "<C-f>",
-            accept_word = "<C-j>",
-            accept_line = false,
-            next = "<M-]>",
-            prev = "<M-[>",
-            dismiss = "<C-]>",
-        },
-    },
-    filetypes = {
-        ["*"] = true,
-    },
+	panel = {
+		enabled = false,
+	},
+	suggestion = {
+		enabled = true,
+		auto_trigger = true, -- Enable auto_trigger so it works when the client is enabled
+		keymap = {
+			accept = "<C-f>",
+			accept_word = "<C-j>",
+			accept_line = false,
+			next = "<M-]>",
+			prev = "<M-[>",
+			dismiss = "<C-]>",
+		},
+	},
+	filetypes = {
+		["*"] = true,
+	},
 })
 
--- copilot_enabled defined near statusline to allow access
+-- Initialize Copilot as disabled (SILENTLY)
+vim.schedule(function()
+	-- HACK: Temporarily mute notifications to suppress "Copilot disabled" message on startup
+	local original_notify = vim.notify
+	vim.notify = function() end
+	pcall(require("copilot.command").disable)
+	vim.defer_fn(function() vim.notify = original_notify end, 100)
+end)
 
 local function toggle_copilot()
-    copilot_enabled = not copilot_enabled
-    
-    -- 1. Toggle for current buffer
-    require("copilot.suggestion").toggle_auto_trigger()
-    
-    -- 2. Force setting for future buffers
-    require("copilot.config").get("suggestion").auto_trigger = copilot_enabled
+	-- Toggle global variable
+	vim.g.copilot_enabled = not vim.g.copilot_enabled
 
-    if copilot_enabled then
-        vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
-    else
-        vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
-    end
-    -- Redraw statusline
-    vim.cmd('redrawstatus')
+	if vim.g.copilot_enabled then
+		require("copilot.command").enable()
+		vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
+	else
+		require("copilot.command").disable()
+		vim.api.nvim_echo({ { "  Copilot Disabled  ", "WarningMsg" } }, false, {})
+	end
+	vim.cmd("redrawstatus") -- Force immediate statusline update
 end
 
 vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
 
 -- [Copilot Chat]
 require("CopilotChat").setup({
-    model = "claude-opus-4.5",
-    mappings = {
-        reset = {
-            normal = "<C-x>",
-            insert = "<C-x>",
-        },
-    },
+	model = "claude-opus-4.5",
+	mappings = {
+		reset = {
+			normal = "<C-x>",
+			insert = "<C-x>",
+		},
+	},
 })
 
 vim.keymap.set("n", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Toggle Copilot Chat" })
@@ -563,32 +556,32 @@ vim.keymap.set("v", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix selec
 
 -- [Completion with blink.cmp]
 require("blink.cmp").setup({
-    keymap = {
-        preset = 'default',
-        ['<C-l>'] = { 'select_and_accept' },
-        ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
-        ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
-        ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
-        ['<Space>'] = { 'accept', 'fallback' },
-    },
-    appearance = {
-        use_nvim_cmp_as_default = true,
-        nerd_font_variant = 'mono',
-    },
-    completion = {
-        list = {
-            selection = { preselect = false, auto_insert = true }
-        },
-        documentation = {
-            auto_show = false,
-            auto_show_delay_ms = 200,
-        },
-        ghost_text = { enabled = false },
-    },
-    sources = {
-        default = { 'lsp', 'path', 'buffer' },
-    },
-    signature = { enabled = false },
+	keymap = {
+		preset = 'default',
+		['<C-l>'] = { 'select_and_accept' },
+		['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+		['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+		['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
+		['<Space>'] = { 'accept', 'fallback' },
+	},
+	appearance = {
+		use_nvim_cmp_as_default = true,
+		nerd_font_variant = 'mono',
+	},
+	completion = {
+		list = {
+			selection = { preselect = false, auto_insert = true }
+		},
+		documentation = {
+			auto_show = false,
+			auto_show_delay_ms = 200,
+		},
+		ghost_text = { enabled = false },
+	},
+	sources = {
+		default = { 'lsp', 'path', 'buffer' },
+	},
+	signature = { enabled = false },
 })
 
 -- [LSP CONFIG]
