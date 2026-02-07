@@ -113,7 +113,7 @@ local function open_term(opts)
 end
 
 vim.api.nvim_create_user_command("T", function() open_term() end, {})
-vim.api.nvim_set_keymap('n', '<leader>tv', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
+vim.api.nvim_set_keymap('n', '<leader>tk', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
 
 vim.api.nvim_create_user_command("TH", function() open_term({ horizontal = true }) end, {})
 vim.api.nvim_set_keymap('n', '<leader>th', '<CMD>:TH<CR>', { desc = 'open a horizontally split terminal' })
