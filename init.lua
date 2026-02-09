@@ -511,13 +511,19 @@ require("copilot").setup({
 	},
 })
 
+-- Suppress harmless ServerNotInitialized RPC errors from Copilot
+-- (race between suggestion requests and LSP server restart on re-enable)
+do
+	local _original_notify = vim.notify
+	vim.notify = function(msg, ...)
+		if type(msg) == "string" and (msg:match("ServerNotInitialized") or msg:match("copilot is disabled")) then return end
+		return _original_notify(msg, ...)
+	end
+end
+
 -- Initialize Copilot as disabled (SILENTLY)
 vim.schedule(function()
-	-- HACK: Temporarily mute notifications to suppress "Copilot disabled" message on startup
-	local original_notify = vim.notify
-	vim.notify = function() end
 	pcall(require("copilot.command").disable)
-	vim.defer_fn(function() vim.notify = original_notify end, 100)
 end)
 
 local function toggle_copilot()
