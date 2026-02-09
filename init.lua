@@ -457,20 +457,63 @@ vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
 	callback = update_git_branch,
 })
 
+-- Statusline diagnostic highlights (muted red for errors, muted yellow for warnings)
+local function set_diag_highlights()
+	vim.api.nvim_set_hl(0, "StatusDiagError", { fg = "#c45a5a", bg = "NONE" })
+	vim.api.nvim_set_hl(0, "StatusDiagWarn", { fg = "#c4a94a", bg = "NONE" })
+end
+set_diag_highlights()
+vim.api.nvim_create_autocmd("ColorScheme", { callback = set_diag_highlights })
+
 function StatusLine()
 	-- Access global variable directly
 	local copilot_status = vim.g.copilot_enabled and " [CP] " or ""
+
+	-- Diagnostics: errors and warnings with first line
+	local diag_str = ""
+
+	local errors = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
+	if #errors > 0 then
+		local first_line = errors[1].lnum + 1
+		for _, e in ipairs(errors) do
+			local l = e.lnum + 1
+			if l < first_line then first_line = l end
+		end
+		diag_str = diag_str .. "%#StatusDiagError# E:" .. #errors .. " L" .. first_line .. " "
+	end
+
+	local warnings = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
+	if #warnings > 0 then
+		local first_line = warnings[1].lnum + 1
+		for _, w in ipairs(warnings) do
+			local l = w.lnum + 1
+			if l < first_line then first_line = l end
+		end
+		diag_str = diag_str .. "%#StatusDiagWarn# W:" .. #warnings .. " L" .. first_line .. " "
+	end
+
+	if diag_str ~= "" then
+		diag_str = diag_str .. "%#StatusLine#"
+	end
+
 	return table.concat({
 		" %f",
 		" %m",
 		cached_branch,
 		"%=",
+		diag_str,
 		copilot_status,
 		" L:%l/%L C:%c ",
 	})
 end
 
 vim.o.statusline = "%{%v:lua.StatusLine()%}"
+
+vim.api.nvim_create_autocmd("DiagnosticChanged", {
+	callback = function()
+		vim.cmd("redrawstatus")
+	end,
+})
 
 -- Tabline
 vim.o.showtabline = 2
