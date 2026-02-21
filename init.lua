@@ -131,6 +131,18 @@ end
 
 map({ 'n', 't' }, '<C-a>h', '<cmd>tabprevious<CR>')
 map({ 'n', 't' }, '<C-a>l', '<cmd>tabnext<CR>')
+-- Tmux-style terminal splits (bottom and right)
+map({ 'n', 't' }, '<C-a>"', function()
+	vim.cmd("botright split")
+	vim.cmd("terminal")
+	vim.cmd("startinsert")
+end)
+
+map({ 'n', 't' }, '<C-a>%', function()
+	vim.cmd("botright vsplit")
+	vim.cmd("terminal")
+	vim.cmd("startinsert")
+end)
 vim.keymap.set({ 'n', 't' }, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
 vim.keymap.set({ 'n', 't' }, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
 
@@ -511,7 +523,9 @@ vim.o.statusline = "%{%v:lua.StatusLine()%}"
 
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
 	callback = function()
-		vim.cmd("redrawstatus")
+		if vim.fn.mode() ~= "i" then
+			vim.cmd("redrawstatus")
+		end
 	end,
 })
 
