@@ -821,3 +821,27 @@ vim.lsp.config('intelephense', {
 	root_markers = { 'composer.json', '.git' },
 })
 vim.lsp.enable('intelephense')
+
+-- HTML
+vim.lsp.config('html', {
+	cmd = { 'vscode-html-language-server', '--stdio' },
+	filetypes = { 'html' },
+	root_markers = { 'package.json', '.git' },
+})
+vim.lsp.enable('html')
+
+-- CSS
+vim.lsp.config('cssls', {
+	cmd = { 'vscode-css-language-server', '--stdio' },
+	filetypes = { 'css', 'scss', 'less' },
+	root_markers = { 'package.json', '.git' },
+})
+vim.lsp.enable('cssls')
+
+-- JSON
+vim.lsp.config('jsonls', {
+	cmd = { 'vscode-json-language-server', '--stdio' },
+	filetypes = { 'json', 'jsonc' },
+	root_markers = { 'package.json', '.git' },
+})
+vim.lsp.enable('jsonls')
