@@ -813,3 +813,11 @@ vim.lsp.config('lua_ls', {
 })
 
 vim.lsp.enable('lua_ls')
+
+-- PHP
+vim.lsp.config('intelephense', {
+	cmd = { 'intelephense', '--stdio' },
+	filetypes = { 'php' },
+	root_markers = { 'composer.json', '.git' },
+})
+vim.lsp.enable('intelephense')
