@@ -1,5 +1,12 @@
 vim.g.mapleader = " "
 
+-- [Blade filetype detection]
+vim.filetype.add({
+	pattern = {
+		[".*%.blade%.php"] = "blade",
+	},
+})
+
 -- [Global general keymaps]
 vim.api.nvim_set_keymap('i', 'jk', '<ESC>', { noremap = true })
 vim.api.nvim_set_keymap('n', 'H', '^', { noremap = true })
@@ -14,28 +21,22 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 		vim.hl.on_yank()
 	end,
 })
-
 -- [Cursor]
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
 vim.o.cursorline = true
-
 local normal_bg = "#1a1f20"
 local insert_bg = "#252a2b"
-
 vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
-
 vim.api.nvim_create_autocmd("InsertEnter", {
 	callback = function()
 		vim.api.nvim_set_hl(0, "CursorLine", { bg = insert_bg })
 	end,
 })
-
 vim.api.nvim_create_autocmd("InsertLeave", {
 	callback = function()
 		vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
 	end,
 })
-
 -- [Options]
 vim.o.clipboard = "unnamedplus"
 vim.o.number = true
@@ -54,7 +55,6 @@ vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
 vim.o.autochdir = false
 vim.o.scrollback = 100000
-
 -- [Shell]
 vim.api.nvim_create_user_command("R", function(opts)
 	local output = vim.fn.systemlist(opts.args)
@@ -78,15 +78,12 @@ end, {
 		return files
 	end,
 })
-
 vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
-
 -- [Terminal]
 local function open_term(opts)
 	opts = opts or {}
 	local fullscreen = opts.fullscreen or false
 	local horizontal = opts.horizontal or false
-
 	if fullscreen then
 		vim.cmd("tabnew | terminal")
 	elseif horizontal then
@@ -98,29 +95,21 @@ local function open_term(opts)
 		local width = math.floor(vim.o.columns * 0.35)
 		vim.api.nvim_win_set_width(0, width)
 	end
-
 	local buf = vim.api.nvim_get_current_buf()
-
 	vim.bo[buf].buflisted = false
 	vim.wo.number = false
 	vim.wo.relativenumber = false
 	vim.wo.signcolumn = "no"
-
 	vim.keymap.set("t", "Q", [[<C-\><C-n>:close<CR>]], { buffer = buf, noremap = true, silent = true })
 	vim.keymap.set("n", "Q", [[<cmd>close<CR>]], { buffer = buf, noremap = true, silent = true })
-
 	vim.cmd("startinsert")
 end
-
 vim.api.nvim_create_user_command("T", function() open_term() end, {})
 vim.api.nvim_set_keymap('n', '<leader>tk', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
-
 vim.api.nvim_create_user_command("TH", function() open_term({ horizontal = true }) end, {})
 vim.api.nvim_set_keymap('n', '<leader>th', '<CMD>:TH<CR>', { desc = 'open a horizontally split terminal' })
-
 vim.api.nvim_create_user_command("TF", function() open_term({ fullscreen = true }) end, {})
 vim.api.nvim_set_keymap('n', '<leader>tf', '<CMD>:TF<CR>', { desc = 'open a full screen terminal' })
-
 -- [Tab + Terminal Workflow]
 local function map(mode, lhs, rhs, opts)
 	opts = opts or {}
@@ -128,7 +117,6 @@ local function map(mode, lhs, rhs, opts)
 	opts.silent = true
 	vim.keymap.set(mode, lhs, rhs, opts)
 end
-
 map({ 'n', 't' }, '<C-a>h', '<cmd>tabprevious<CR>')
 map({ 'n', 't' }, '<C-a>l', '<cmd>tabnext<CR>')
 -- Tmux-style terminal splits (bottom and right)
@@ -137,7 +125,6 @@ map({ 'n', 't' }, '<C-a>"', function()
 	vim.cmd("terminal")
 	vim.cmd("startinsert")
 end)
-
 map({ 'n', 't' }, '<C-a>%', function()
 	vim.cmd("botright vsplit")
 	vim.cmd("terminal")
@@ -145,14 +132,11 @@ map({ 'n', 't' }, '<C-a>%', function()
 end)
 vim.keymap.set({ 'n', 't' }, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
 vim.keymap.set({ 'n', 't' }, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
-
 for i = 1, 9 do
 	map({ 'n', 't' }, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
 end
-
 map({ 'n', 't' }, '<C-a>c', '<cmd>tabnew | terminal<CR>')
 map({ 'n', 't' }, '<C-a>x', '<cmd>tabclose<CR>')
-
 map('t', '<C-h>', [[<C-\><C-n><C-w>h]])
 map('t', '<C-j>', [[<C-\><C-n><C-w>j]])
 map('t', '<C-k>', [[<C-\><C-n><C-w>k]])
@@ -161,7 +145,6 @@ map('n', '<C-h>', '<C-w>h')
 map('n', '<C-j>', '<C-w>j')
 map('n', '<C-k>', '<C-w>k')
 map('n', '<C-l>', '<C-w>l')
-
 -- [Persistant undo directory]
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.expand("~/.vim/undodir")
@@ -169,7 +152,6 @@ local undodir = vim.fn.expand("~/.vim/undodir")
 if vim.fn.isdirectory(undodir) == 0 then
 	vim.fn.mkdir(undodir, "p")
 end
-
 -- [Packages]
 vim.pack.add({
 	"https://github.com/neovim/nvim-lspconfig",
@@ -186,7 +168,6 @@ vim.pack.add({
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/nvim-telescope/telescope.nvim",
 })
-
 -- [Hydra] Pane resizing
 local Hydra = require('hydra')
 Hydra({
@@ -201,7 +182,6 @@ Hydra({
 		{ '<Esc>', nil,                          { exit = true, nowait = true } },
 	},
 })
-
 -- [File explorer]
 require("oil").setup({
 	default_file_explorer = true,
@@ -226,9 +206,7 @@ require("oil").setup({
 		},
 	},
 })
-
 vim.api.nvim_set_keymap('n', '=', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
-
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "oil",
 	callback = function()
@@ -238,13 +216,11 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.wo.concealcursor = "nvic"
 	end,
 })
-
 -- [Project Root Management]
 local function find_project_root()
 	local markers = { '.git', 'Cargo.toml', 'package.json', 'Makefile', '.project_root' }
 	local path = vim.fn.expand('%:p:h')
 	if path == '' then path = vim.fn.getcwd() end
-
 	for _ = 1, 20 do
 		for _, marker in ipairs(markers) do
 			if vim.fn.isdirectory(path .. '/' .. marker) == 1 or vim.fn.filereadable(path .. '/' .. marker) == 1 then
@@ -257,7 +233,6 @@ local function find_project_root()
 	end
 	return nil
 end
-
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		local root = find_project_root()
@@ -269,7 +244,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
 		end
 	end,
 })
-
 vim.api.nvim_create_user_command("SetRoot", function()
 	local dir
 	if vim.bo.filetype == "oil" then
@@ -284,7 +258,6 @@ vim.api.nvim_create_user_command("SetRoot", function()
 	end
 end, {})
 vim.keymap.set('n', '<leader>sd', '<cmd>SetRoot<CR>', { desc = 'set project root' })
-
 vim.api.nvim_create_user_command("CdRoot", function()
 	if vim.g.project_root then
 		vim.cmd("cd " .. vim.fn.fnameescape(vim.g.project_root))
@@ -293,9 +266,7 @@ vim.api.nvim_create_user_command("CdRoot", function()
 		vim.notify("No project root set", vim.log.levels.WARN)
 	end
 end, {})
-
 vim.keymap.set('n', '<leader>cd', '<cmd>CdRoot<CR>', { desc = 'cd to project root' })
-
 -- [Telescope - Find / Grep / Recent]
 require('telescope').setup({
 	defaults = {
@@ -312,19 +283,13 @@ require('telescope').setup({
 		},
 	},
 })
-
 local builtin = require('telescope.builtin')
-
 -- C-p: find files (Telescope)
 vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Telescope find files' })
-
 -- TAB: recent files in project (Telescope)
 vim.keymap.set('n', '<TAB>', builtin.oldfiles, { desc = 'Telescope recent files' })
-
 -- C-u: grep project (Telescope)
 vim.keymap.set('n', '<C-u>', builtin.live_grep, { desc = 'Telescope live grep' })
-
-
 -- [Quickfix behaviour]
 -- Tab/Shift-Tab to navigate, Enter to open (already default), q to close
 vim.api.nvim_create_autocmd("FileType", {
@@ -336,7 +301,6 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.keymap.set('n', 'q', '<cmd>cclose<CR>', { buffer = buf, noremap = true, silent = true })
 	end,
 })
-
 -- Quickfix navigation + toggle
 vim.keymap.set('n', ']q', '<cmd>cnext<CR>zz', { desc = 'Next quickfix' })
 vim.keymap.set('n', '[q', '<cmd>cprev<CR>zz', { desc = 'Prev quickfix' })
@@ -350,10 +314,8 @@ vim.keymap.set('n', '<leader>o', function()
 	end
 	vim.cmd("copen")
 end, { desc = 'Toggle quickfix' })
-
 -- [Visual wrap]
 require("visual_wrap").setup()
-
 -- [Theme]
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "*",
@@ -363,9 +325,7 @@ vim.api.nvim_create_autocmd("FileType", {
 		end
 	end,
 })
-
 vim.o.termguicolors = true
-
 vim.api.nvim_create_autocmd("ColorScheme", {
 	callback = function()
 		local hl = vim.api.nvim_set_hl
@@ -375,9 +335,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 		hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#50fa7b" })
 	end,
 })
-
 vim.cmd.colorscheme('y9nika-less')
-
 require("y9nika.core").apply {
 	background = "#0e1415",
 	foreground = "#d0cfb8",
@@ -386,12 +344,10 @@ require("y9nika.core").apply {
 	muted = "#aaaaaa",
 	marker = "#dfdf8e",
 }
-
 vim.api.nvim_set_hl(0, "Number", { fg = "#9fb4c7" })
 vim.api.nvim_set_hl(0, "Float", { fg = "#9fb4c7" })
 vim.api.nvim_set_hl(0, "Boolean", { fg = "#9fb4c7" })
 vim.api.nvim_set_hl(0, "Comment", { fg = "#8a8f93" })
-
 local hl = vim.api.nvim_set_hl
 hl(0, "@comment", { link = "Comment" })
 hl(0, "@string", { fg = "#a9b665" })
@@ -429,13 +385,11 @@ hl(0, "@lsp.type.method", { link = "Function" })
 hl(0, "@lsp.typemod.function.declaration", { link = "Function" })
 hl(0, "@lsp.typemod.method.declaration", { link = "Function" })
 hl(0, "@function.call.rust", { fg = "#71ade7" })
-
 -- [Auto pair]
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
 require("nvim-autopairs").remove_rule("'", "rust")
-
 -- [End of line hints]
 require("lsp-endhints").setup({
 	icons = {
@@ -451,11 +405,9 @@ require("lsp-endhints").setup({
 	},
 	autoEnableHints = true,
 })
-
 -- [Statusline]
 local cached_branch = ""
 vim.g.copilot_enabled = false -- Initialize global variable
-
 local function update_git_branch()
 	local branch = vim.fn.system("git rev-parse --abbrev-ref HEAD 2>/dev/null"):gsub("\n", "")
 	if vim.v.shell_error ~= 0 then
@@ -464,11 +416,9 @@ local function update_git_branch()
 		cached_branch = " " .. branch .. " |"
 	end
 end
-
 vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
 	callback = update_git_branch,
 })
-
 -- Statusline diagnostic highlights (muted red for errors, muted yellow for warnings)
 local function set_diag_highlights()
 	vim.api.nvim_set_hl(0, "StatusDiagError", { fg = "#c45a5a", bg = "NONE" })
@@ -476,14 +426,11 @@ local function set_diag_highlights()
 end
 set_diag_highlights()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = set_diag_highlights })
-
 function StatusLine()
 	-- Access global variable directly
 	local copilot_status = vim.g.copilot_enabled and " [CP] " or ""
-
 	-- Diagnostics: errors and warnings with first line
 	local diag_str = ""
-
 	local errors = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
 	if #errors > 0 then
 		local first_line = errors[1].lnum + 1
@@ -493,7 +440,6 @@ function StatusLine()
 		end
 		diag_str = diag_str .. "%#StatusDiagError# E:" .. #errors .. " L" .. first_line .. " "
 	end
-
 	local warnings = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
 	if #warnings > 0 then
 		local first_line = warnings[1].lnum + 1
@@ -503,11 +449,9 @@ function StatusLine()
 		end
 		diag_str = diag_str .. "%#StatusDiagWarn# W:" .. #warnings .. " L" .. first_line .. " "
 	end
-
 	if diag_str ~= "" then
 		diag_str = diag_str .. "%#StatusLine#"
 	end
-
 	return table.concat({
 		" %f",
 		" %m",
@@ -520,7 +464,6 @@ function StatusLine()
 end
 
 vim.o.statusline = "%{%v:lua.StatusLine()%}"
-
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
 	callback = function()
 		if vim.fn.mode() ~= "i" then
@@ -528,10 +471,8 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 		end
 	end,
 })
-
 -- Tabline
 vim.o.showtabline = 2
-
 function TabLine()
 	local s = ""
 	for i = 1, vim.fn.tabpagenr("$") do
@@ -545,7 +486,6 @@ function TabLine()
 end
 
 vim.o.tabline = "%!v:lua.TabLine()"
-
 -- [Copilot]
 require("copilot").setup({
 	panel = {
@@ -567,7 +507,6 @@ require("copilot").setup({
 		["*"] = true,
 	},
 })
-
 -- Suppress harmless ServerNotInitialized RPC errors from Copilot
 -- (race between suggestion requests and LSP server restart on re-enable)
 do
@@ -577,16 +516,13 @@ do
 		return _original_notify(msg, ...)
 	end
 end
-
 -- Initialize Copilot as disabled (SILENTLY)
 vim.schedule(function()
 	pcall(require("copilot.command").disable)
 end)
-
 local function toggle_copilot()
 	-- Toggle global variable
 	vim.g.copilot_enabled = not vim.g.copilot_enabled
-
 	if vim.g.copilot_enabled then
 		require("copilot.command").enable()
 		vim.api.nvim_echo({ { "  Copilot Enabled  ", "MoreMsg" } }, false, {})
@@ -596,9 +532,7 @@ local function toggle_copilot()
 	end
 	vim.cmd("redrawstatus") -- Force immediate statusline update
 end
-
 vim.keymap.set("n", "<M-g>", toggle_copilot, { desc = "Toggle Copilot" })
-
 -- [Copilot Chat]
 require("CopilotChat").setup({
 	model = "claude-opus-4.5",
@@ -609,14 +543,12 @@ require("CopilotChat").setup({
 		},
 	},
 })
-
 vim.keymap.set("n", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Toggle Copilot Chat" })
 vim.keymap.set("v", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Toggle Copilot Chat" })
 vim.keymap.set("n", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Explain code" })
 vim.keymap.set("v", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Explain selection" })
 vim.keymap.set("n", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix code" })
 vim.keymap.set("v", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix selection" })
-
 -- [Completion with blink.cmp]
 require("blink.cmp").setup({
 	keymap = {
@@ -646,22 +578,18 @@ require("blink.cmp").setup({
 	},
 	signature = { enabled = false },
 })
-
 -- [LSP CONFIG]
 vim.api.nvim_create_autocmd('LspAttach', {
 	callback = function(args)
 		local client = vim.lsp.get_client_by_id(args.data.client_id)
-
 		if client and client:supports_method('textDocument/inlayHint') then
 			vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
 		end
 	end,
 })
-
 vim.keymap.set('n', '<leader>h', function()
 	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }))
 end, { desc = 'Toggle inlay hints' })
-
 vim.keymap.set('n', 'gR', '<cmd>lua vim.lsp.buf.rename()<cr>')
 vim.keymap.set('n', '<c-]>', '<cmd>lua vim.lsp.buf.definition()<cr>')
 vim.keymap.set('n', '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
@@ -679,8 +607,7 @@ vim.keymap.set('n', ']x', '<cmd>lua vim.diagnostic.goto_next()<cr>')
 vim.keymap.set('n', '<leader>d', '<cmd>lua vim.diagnostic.open_float()<cr>')
 vim.keymap.set('n', '<leader>q', '<cmd>lua vim.diagnostic.setqflist()<cr>')
 vim.keymap.set('n', '<leader>p', '<cmd>lua vim.lsp.buf.format()<cr>')
-
--- Format using LSP, fall back to external formatter
+-- Format: external formatter first, fall back to LSP
 local formatters = {
 	python = "black -q -",
 	rust = "rustfmt",
@@ -694,14 +621,25 @@ local formatters = {
 	go = "gofmt",
 	c = "clang-format",
 	cpp = "clang-format",
+	php = "./vendor/bin/pint %",
+	blade = "blade-formatter --stdin",
 }
-
 local function formatter_exists(cmd)
 	local binary = cmd:match("^(%S+)")
 	return vim.fn.executable(binary) == 1
 end
-
 vim.keymap.set('n', '<leader>f', function()
+	local ft = vim.bo.filetype
+	local formatter = formatters[ft]
+
+	if formatter and formatter_exists(formatter) then
+		local view = vim.fn.winsaveview()
+		vim.bo.formatprg = formatter
+		vim.cmd('normal! gggqG')
+		vim.fn.winrestview(view)
+		return
+	end
+
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	for _, client in ipairs(clients) do
 		if client:supports_method('textDocument/formatting') then
@@ -710,26 +648,8 @@ vim.keymap.set('n', '<leader>f', function()
 		end
 	end
 
-	local ft = vim.bo.filetype
-	local formatter = formatters[ft]
-
-	if not formatter then
-		vim.notify("No formatter configured for " .. ft, vim.log.levels.WARN)
-		return
-	end
-
-	if not formatter_exists(formatter) then
-		local binary = formatter:match("^(%S+)")
-		vim.notify("Formatter not installed: " .. binary, vim.log.levels.WARN)
-		return
-	end
-
-	local view = vim.fn.winsaveview()
-	vim.bo.formatprg = formatter
-	vim.cmd('normal! gggqG')
-	vim.fn.winrestview(view)
+	vim.notify("No formatter configured for " .. ft, vim.log.levels.WARN)
 end, { desc = 'Format file' })
-
 -- Rust
 vim.lsp.config('rust_analyzer', {
 	cmd = { 'rust-analyzer' },
@@ -764,7 +684,6 @@ vim.lsp.config('rust_analyzer', {
 	},
 })
 vim.lsp.enable('rust_analyzer')
-
 -- Python
 vim.lsp.config('basedpyright', {
 	cmd = { 'basedpyright-langserver', '--stdio' },
@@ -772,7 +691,6 @@ vim.lsp.config('basedpyright', {
 	root_markers = { 'pyproject.toml', 'setup.py', 'requirements.txt', '.git' },
 })
 vim.lsp.enable('basedpyright')
-
 -- Lua
 vim.lsp.config('lua_ls', {
 	on_init = function(client)
@@ -785,7 +703,6 @@ vim.lsp.config('lua_ls', {
 				return
 			end
 		end
-
 		client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
 			runtime = {
 				version = 'LuaJIT',
@@ -806,22 +723,18 @@ vim.lsp.config('lua_ls', {
 			},
 		})
 	end,
-
 	settings = {
 		Lua = {},
 	},
 })
-
 vim.lsp.enable('lua_ls')
-
--- PHP
+-- PHP (+ Blade)
 vim.lsp.config('intelephense', {
 	cmd = { 'intelephense', '--stdio' },
-	filetypes = { 'php' },
+	filetypes = { 'php', 'blade' },
 	root_markers = { 'composer.json', '.git' },
 })
 vim.lsp.enable('intelephense')
-
 -- HTML
 vim.lsp.config('html', {
 	cmd = { 'vscode-html-language-server', '--stdio' },
@@ -829,7 +742,6 @@ vim.lsp.config('html', {
 	root_markers = { 'package.json', '.git' },
 })
 vim.lsp.enable('html')
-
 -- CSS
 vim.lsp.config('cssls', {
 	cmd = { 'vscode-css-language-server', '--stdio' },
@@ -837,7 +749,6 @@ vim.lsp.config('cssls', {
 	root_markers = { 'package.json', '.git' },
 })
 vim.lsp.enable('cssls')
-
 -- JSON
 vim.lsp.config('jsonls', {
 	cmd = { 'vscode-json-language-server', '--stdio' },
