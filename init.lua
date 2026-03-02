@@ -1,11 +1,5 @@
 vim.g.mapleader = " "
-
--- [Blade filetype detection]
-vim.filetype.add({
-	pattern = {
-		[".*%.blade%.php"] = "blade",
-	},
-})
+vim.cmd("filetype plugin indent on")
 
 -- [Global general keymaps]
 vim.api.nvim_set_keymap('i', 'jk', '<ESC>', { noremap = true })
@@ -21,6 +15,54 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 		vim.hl.on_yank()
 	end,
 })
+
+-- Auto-close terminal buffers when shell exits
+vim.api.nvim_create_autocmd("TermClose", {
+	callback = function(args)
+		vim.schedule(function()
+			if vim.api.nvim_buf_is_valid(args.buf) then
+				vim.cmd("bd! " .. args.buf)
+			end
+		end)
+	end,
+})
+
+-- [Smart :q] file buffer -> terminal, terminal last-tab -> quit
+vim.api.nvim_create_user_command("Qq", function()
+	local buf = vim.api.nvim_get_current_buf()
+
+	if vim.bo[buf].buftype == "terminal" then
+		if vim.fn.winnr("$") > 1 then
+			vim.cmd("close")
+		elseif vim.fn.tabpagenr("$") <= 1 then
+			vim.cmd("qa!")
+		else
+			vim.cmd("tabclose")
+		end
+		return
+	end
+
+	-- In a split — just close the window, don't jump to terminal
+	if vim.fn.winnr("$") > 1 then
+		vim.cmd("close")
+		return
+	end
+
+	-- Last window in tab — find a terminal to switch to
+	for _, b in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].buftype == "terminal" then
+			vim.cmd("buffer " .. b)
+			vim.cmd("startinsert")
+			return
+		end
+	end
+
+	-- No terminal exists, quit normally
+	vim.cmd("q")
+end, {})
+
+vim.cmd([[cnoreabbrev <expr> q (getcmdtype() == ':' && getcmdline() ==# 'q') ? 'Qq' : 'q']])
+
 -- [Cursor]
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
 vim.o.cursorline = true
@@ -45,6 +87,9 @@ vim.o.confirm = true
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.smarttab = true
+vim.o.expandtab = false
+vim.o.smartindent = true
+vim.o.autoindent = true
 vim.o.softtabstop = 4
 vim.o.scrolloff = 10
 vim.opt.hidden = true
@@ -55,6 +100,15 @@ vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
 vim.o.autochdir = false
 vim.o.scrollback = 100000
+
+-- PHP auto indentation
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "php",
+	callback = function()
+		vim.bo.autoindent = true
+	end,
+})
+
 -- [Shell]
 vim.api.nvim_create_user_command("R", function(opts)
 	local output = vim.fn.systemlist(opts.args)
@@ -79,6 +133,15 @@ end, {
 	end,
 })
 vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
+-- Get the actual cwd of the current terminal's shell process
+local function get_terminal_cwd()
+	local pid = vim.b.terminal_job_pid
+	if pid then
+		local cwd = vim.uv.fs_readlink("/proc/" .. pid .. "/cwd")
+		if cwd then return cwd end
+	end
+	return vim.fn.getcwd()
+end
 -- [Terminal]
 local function open_term(opts)
 	opts = opts or {}
@@ -121,12 +184,16 @@ map({ 'n', 't' }, '<C-a>h', '<cmd>tabprevious<CR>')
 map({ 'n', 't' }, '<C-a>l', '<cmd>tabnext<CR>')
 -- Tmux-style terminal splits (bottom and right)
 map({ 'n', 't' }, '<C-a>"', function()
+	local dir = get_terminal_cwd()
 	vim.cmd("botright split")
+	vim.cmd("lcd " .. vim.fn.fnameescape(dir))
 	vim.cmd("terminal")
 	vim.cmd("startinsert")
 end)
 map({ 'n', 't' }, '<C-a>%', function()
+	local dir = get_terminal_cwd()
 	vim.cmd("botright vsplit")
+	vim.cmd("lcd " .. vim.fn.fnameescape(dir))
 	vim.cmd("terminal")
 	vim.cmd("startinsert")
 end)
@@ -135,7 +202,13 @@ vim.keymap.set({ 'n', 't' }, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true,
 for i = 1, 9 do
 	map({ 'n', 't' }, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
 end
-map({ 'n', 't' }, '<C-a>c', '<cmd>tabnew | terminal<CR>')
+map({ 'n', 't' }, '<C-a>c', function()
+	local dir = get_terminal_cwd()
+	vim.cmd("tabnew")
+	vim.cmd("lcd " .. vim.fn.fnameescape(dir))
+	vim.cmd("terminal")
+	vim.cmd("startinsert")
+end)
 map({ 'n', 't' }, '<C-a>x', '<cmd>tabclose<CR>')
 map('t', '<C-h>', [[<C-\><C-n><C-w>h]])
 map('t', '<C-j>', [[<C-\><C-n><C-w>j]])
@@ -219,7 +292,12 @@ vim.api.nvim_create_autocmd("FileType", {
 -- [Project Root Management]
 local function find_project_root()
 	local markers = { '.git', 'Cargo.toml', 'package.json', 'Makefile', '.project_root' }
-	local path = vim.fn.expand('%:p:h')
+	local path
+	if vim.bo.buftype == "terminal" then
+		path = get_terminal_cwd()
+	else
+		path = vim.fn.expand('%:p:h')
+	end
 	if path == '' then path = vim.fn.getcwd() end
 	for _ = 1, 20 do
 		for _, marker in ipairs(markers) do
@@ -235,19 +313,25 @@ local function find_project_root()
 end
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
-		local root = find_project_root()
-		if root then
-			vim.g.project_root = root
-			vim.cmd("cd " .. vim.fn.fnameescape(root))
-		else
-			vim.g.project_root = vim.fn.getcwd()
-		end
+		-- When starting with +term, expand('%:p:h') is useless
+		-- Defer so the terminal process has time to start
+		vim.schedule(function()
+			local root = find_project_root()
+			if root then
+				vim.g.project_root = root
+				vim.cmd("cd " .. vim.fn.fnameescape(root))
+			else
+				vim.g.project_root = vim.fn.getcwd()
+			end
+		end)
 	end,
 })
 vim.api.nvim_create_user_command("SetRoot", function()
 	local dir
 	if vim.bo.filetype == "oil" then
 		dir = require("oil").get_current_dir()
+	elseif vim.bo.buftype == "terminal" then
+		dir = get_terminal_cwd()
 	else
 		dir = vim.fn.expand('%:p:h')
 	end
@@ -485,6 +569,13 @@ function TabLine()
 	return s
 end
 
+-- [Blade filetype detection]
+vim.filetype.add({
+	pattern = {
+		[".*%.blade%.php"] = "blade",
+	},
+})
+
 vim.o.tabline = "%!v:lua.TabLine()"
 -- [Copilot]
 require("copilot").setup({
@@ -605,7 +696,7 @@ vim.keymap.set('n', '<leader>.', '<cmd>lua vim.lsp.buf.code_action()<cr>')
 vim.keymap.set('n', '[x', '<cmd>lua vim.diagnostic.goto_prev()<cr>')
 vim.keymap.set('n', ']x', '<cmd>lua vim.diagnostic.goto_next()<cr>')
 vim.keymap.set('n', '<leader>d', '<cmd>lua vim.diagnostic.open_float()<cr>')
-vim.keymap.set('n', '<leader>q', '<cmd>lua vim.diagnostic.setqflist()<cr>')
+vim.keymap.set('n', '<leader>qf', '<cmd>lua vim.diagnostic.setqflist()<cr>')
 vim.keymap.set('n', '<leader>p', '<cmd>lua vim.lsp.buf.format()<cr>')
 -- Format: external formatter first, fall back to LSP
 local formatters = {
