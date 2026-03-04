@@ -27,37 +27,12 @@ vim.api.nvim_create_autocmd("TermClose", {
 	end,
 })
 
--- [Smart :q] file buffer -> terminal, terminal last-tab -> quit
+-- [Smart :q] close split -> close tab -> quit
 vim.api.nvim_create_user_command("Qq", function()
-	local buf = vim.api.nvim_get_current_buf()
-
-	if vim.bo[buf].buftype == "terminal" then
-		if vim.fn.winnr("$") > 1 then
-			vim.cmd("close")
-		elseif vim.fn.tabpagenr("$") <= 1 then
-			vim.cmd("qa!")
-		else
-			vim.cmd("tabclose")
-		end
-		return
-	end
-
-	-- In a split — just close the window, don't jump to terminal
 	if vim.fn.winnr("$") > 1 then
 		vim.cmd("close")
 		return
 	end
-
-	-- Last window in tab — find a terminal to switch to
-	for _, b in ipairs(vim.api.nvim_list_bufs()) do
-		if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].buftype == "terminal" then
-			vim.cmd("buffer " .. b)
-			vim.cmd("startinsert")
-			return
-		end
-	end
-
-	-- No terminal exists, quit normally
 	vim.cmd("q")
 end, {})
 
@@ -133,83 +108,14 @@ end, {
 	end,
 })
 vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
--- Get the actual cwd of the current terminal's shell process
-local function get_terminal_cwd()
-	local pid = vim.b.terminal_job_pid
-	if pid then
-		local cwd = vim.uv.fs_readlink("/proc/" .. pid .. "/cwd")
-		if cwd then return cwd end
-	end
-	return vim.fn.getcwd()
-end
--- [Terminal]
-local function open_term(opts)
-	opts = opts or {}
-	local fullscreen = opts.fullscreen or false
-	local horizontal = opts.horizontal or false
-	if fullscreen then
-		vim.cmd("tabnew | terminal")
-	elseif horizontal then
-		vim.cmd("botright new | terminal")
-		local height = math.floor(vim.o.lines * 0.3)
-		vim.api.nvim_win_set_height(0, height)
-	else
-		vim.cmd("botright vnew | terminal")
-		local width = math.floor(vim.o.columns * 0.35)
-		vim.api.nvim_win_set_width(0, width)
-	end
-	local buf = vim.api.nvim_get_current_buf()
-	vim.bo[buf].buflisted = false
-	vim.wo.number = false
-	vim.wo.relativenumber = false
-	vim.wo.signcolumn = "no"
-	vim.keymap.set("t", "Q", [[<C-\><C-n>:close<CR>]], { buffer = buf, noremap = true, silent = true })
-	vim.keymap.set("n", "Q", [[<cmd>close<CR>]], { buffer = buf, noremap = true, silent = true })
-	vim.cmd("startinsert")
-end
-vim.api.nvim_create_user_command("T", function() open_term() end, {})
-vim.api.nvim_set_keymap('n', '<leader>tk', '<CMD>:T<CR>', { desc = 'open a vertically split terminal' })
-vim.api.nvim_create_user_command("TH", function() open_term({ horizontal = true }) end, {})
-vim.api.nvim_set_keymap('n', '<leader>th', '<CMD>:TH<CR>', { desc = 'open a horizontally split terminal' })
-vim.api.nvim_create_user_command("TF", function() open_term({ fullscreen = true }) end, {})
-vim.api.nvim_set_keymap('n', '<leader>tf', '<CMD>:TF<CR>', { desc = 'open a full screen terminal' })
--- [Tab + Terminal Workflow]
+
+-- [Window navigation] (works with tmux.nvim plugin for seamless pane switching)
 local function map(mode, lhs, rhs, opts)
 	opts = opts or {}
 	opts.noremap = true
 	opts.silent = true
 	vim.keymap.set(mode, lhs, rhs, opts)
 end
-map({ 'n', 't' }, '<C-a>h', '<cmd>tabprevious<CR>')
-map({ 'n', 't' }, '<C-a>l', '<cmd>tabnext<CR>')
--- Tmux-style terminal splits (bottom and right)
-map({ 'n', 't' }, '<C-a>"', function()
-	local dir = get_terminal_cwd()
-	vim.cmd("botright split")
-	vim.cmd("lcd " .. vim.fn.fnameescape(dir))
-	vim.cmd("terminal")
-	vim.cmd("startinsert")
-end)
-map({ 'n', 't' }, '<C-a>%', function()
-	local dir = get_terminal_cwd()
-	vim.cmd("botright vsplit")
-	vim.cmd("lcd " .. vim.fn.fnameescape(dir))
-	vim.cmd("terminal")
-	vim.cmd("startinsert")
-end)
-vim.keymap.set({ 'n', 't' }, '<C-a>n', '<cmd>tabnext<CR>', { noremap = true, silent = true })
-vim.keymap.set({ 'n', 't' }, '<C-a>p', '<cmd>tabprevious<CR>', { noremap = true, silent = true })
-for i = 1, 9 do
-	map({ 'n', 't' }, '<C-a>' .. i, '<cmd>tabnext ' .. i .. '<CR>')
-end
-map({ 'n', 't' }, '<C-a>c', function()
-	local dir = get_terminal_cwd()
-	vim.cmd("tabnew")
-	vim.cmd("lcd " .. vim.fn.fnameescape(dir))
-	vim.cmd("terminal")
-	vim.cmd("startinsert")
-end)
-map({ 'n', 't' }, '<C-a>x', '<cmd>tabclose<CR>')
 map('t', '<C-h>', [[<C-\><C-n><C-w>h]])
 map('t', '<C-j>', [[<C-\><C-n><C-w>j]])
 map('t', '<C-k>', [[<C-\><C-n><C-w>k]])
@@ -294,12 +200,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- [Project Root Management]
 local function find_project_root()
 	local markers = { '.git', 'Cargo.toml', 'package.json', 'Makefile', '.project_root' }
-	local path
-	if vim.bo.buftype == "terminal" then
-		path = get_terminal_cwd()
-	else
-		path = vim.fn.expand('%:p:h')
-	end
+	local path = vim.fn.expand('%:p:h')
 	if path == '' then path = vim.fn.getcwd() end
 	for _ = 1, 20 do
 		for _, marker in ipairs(markers) do
@@ -315,8 +216,6 @@ local function find_project_root()
 end
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
-		-- When starting with +term, expand('%:p:h') is useless
-		-- Defer so the terminal process has time to start
 		vim.schedule(function()
 			local root = find_project_root()
 			if root then
@@ -332,8 +231,6 @@ vim.api.nvim_create_user_command("SetRoot", function()
 	local dir
 	if vim.bo.filetype == "oil" then
 		dir = require("oil").get_current_dir()
-	elseif vim.bo.buftype == "terminal" then
-		dir = get_terminal_cwd()
 	else
 		dir = vim.fn.expand('%:p:h')
 	end
@@ -558,7 +455,7 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 	end,
 })
 -- Tabline
-vim.o.showtabline = 2
+vim.o.showtabline = 0
 function TabLine()
 	local s = ""
 	for i = 1, vim.fn.tabpagenr("$") do
