@@ -241,6 +241,8 @@ vim.pack.add({
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/nvim-telescope/telescope.nvim",
 })
+-- [Blade treesitter] Map blade filetype to the HTML parser for highlighting
+vim.treesitter.language.register("html", "blade")
 -- [Hydra] Pane resizing
 local Hydra = require('hydra')
 Hydra({
@@ -829,7 +831,7 @@ vim.lsp.enable('intelephense')
 -- HTML
 vim.lsp.config('html', {
 	cmd = { 'vscode-html-language-server', '--stdio' },
-	filetypes = { 'html' },
+	filetypes = { 'html', 'blade' },
 	root_markers = { 'package.json', '.git' },
 })
 vim.lsp.enable('html')
