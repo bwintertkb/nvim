@@ -178,6 +178,12 @@ require("oil").setup({
 	keymaps = {
 		["`"] = false,
 		["g~"] = false,
+		["<C-p>"] = {
+			callback = function()
+				require("telescope.builtin").find_files({ cwd = require("oil").get_current_dir() })
+			end,
+			desc = "Telescope find files in Oil dir",
+		},
 	},
 	view_options = {
 		show_hidden = true,
@@ -267,8 +273,14 @@ require('telescope').setup({
 	},
 })
 local builtin = require('telescope.builtin')
--- C-p: find files (Telescope)
-vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Telescope find files' })
+-- C-p: find files (Telescope) — if in Oil, scope to that directory
+vim.keymap.set('n', '<C-p>', function()
+	local dir = nil
+	if vim.bo.filetype == "oil" then
+		dir = require("oil").get_current_dir()
+	end
+	builtin.find_files({ cwd = dir })
+end, { desc = 'Telescope find files' })
 -- TAB: recent files in project (Telescope)
 vim.keymap.set('n', '<TAB>', builtin.oldfiles, { desc = 'Telescope recent files' })
 -- C-u: grep project (Telescope)
