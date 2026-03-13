@@ -146,6 +146,7 @@ vim.pack.add({
 	"https://github.com/saghen/blink.cmp",
 	"https://github.com/nvimtools/hydra.nvim",
 	"https://github.com/nvim-telescope/telescope.nvim",
+	"https://github.com/tpope/vim-fugitive",
 })
 -- [Blade treesitter] Map blade filetype to the HTML parser for highlighting
 vim.treesitter.language.register("html", "blade")
@@ -580,6 +581,10 @@ require("blink.cmp").setup({
 	},
 	signature = { enabled = false },
 })
+
+-- [GIT]
+vim.keymap.set("n", "<leader>gs", vim.cmd.Git, { desc = "Git status (Fugitive)" })
+
 -- [LSP CONFIG]
 vim.api.nvim_create_autocmd('LspAttach', {
 	callback = function(args)
