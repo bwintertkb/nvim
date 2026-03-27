@@ -552,8 +552,21 @@ vim.keymap.set("n", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Expla
 vim.keymap.set("v", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Explain selection" })
 vim.keymap.set("n", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix code" })
 vim.keymap.set("v", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix selection" })
+
 -- [Completion with blink.cmp]
+vim.g.blink_enabled = true
+
+vim.keymap.set("n", "<M-b>", function()
+	vim.g.blink_enabled = not vim.g.blink_enabled
+	if vim.g.blink_enabled then
+		vim.api.nvim_echo({ { "  Blink Enabled  ", "MoreMsg" } }, false, {})
+	else
+		vim.api.nvim_echo({ { "  Blink Disabled  ", "WarningMsg" } }, false, {})
+	end
+end, { desc = "Toggle Blink Completion" })
+
 require("blink.cmp").setup({
+	enabled = function() return vim.g.blink_enabled end,
 	keymap = {
 		preset = 'default',
 		['<C-l>'] = { 'select_and_accept' },
