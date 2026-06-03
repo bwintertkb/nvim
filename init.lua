@@ -326,20 +326,20 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 })
 vim.cmd.colorscheme('y9nika-less')
 require("y9nika.core").apply {
-	background = "#161410", -- dark grey-brown
-	foreground = "#988f7d", -- desaturated greige text
-	primary    = "#b48e57", -- warm tan: definitions + structs/types
-	secondary  = "#897d64", -- grey-brown: numbers, constants
-	muted      = "#6b6454", -- grey-brown: comments + hints
-	marker     = "#ad9252", -- muted amber highlight
+	background = "#161410", -- dark base (unchanged)
+	foreground = "#989680", -- khaki-grey body text
+	primary    = "#b0a45e", -- khaki: definitions + structs/types
+	secondary  = "#998d66", -- grey-brown: numbers, constants
+	muted      = "#66685a", -- grey-brown: comments + hints
+	marker     = "#c2b46a", -- muted amber highlight
 }
-vim.api.nvim_set_hl(0, "Number", { fg = "#897d64" })
-vim.api.nvim_set_hl(0, "Float", { fg = "#897d64" })
-vim.api.nvim_set_hl(0, "Boolean", { fg = "#897d64" })
-vim.api.nvim_set_hl(0, "Comment", { fg = "#6b6454", italic = false })
+vim.api.nvim_set_hl(0, "Number", { fg = "#998d66" })
+vim.api.nvim_set_hl(0, "Float", { fg = "#998d66" })
+vim.api.nvim_set_hl(0, "Boolean", { fg = "#998d66" })
+vim.api.nvim_set_hl(0, "Comment", { fg = "#66685a", italic = false })
 local hl = vim.api.nvim_set_hl
-hl(0, "@comment", { fg = "#6b6454", italic = false })
-hl(0, "@string", { fg = "#8e8e4f" })
+hl(0, "@comment", { fg = "#66685a", italic = false })
+hl(0, "@string", { fg = "#8b9450" })
 hl(0, "@number", { link = "Number" })
 hl(0, "@float", { link = "Float" })
 hl(0, "@boolean", { link = "Boolean" })
@@ -364,8 +364,8 @@ hl(0, "@y9nika.variable", { link = "@function.call.lua" })
 hl(0, "@y9nika.variable.lua", { link = "@function.call.lua" })
 -- [Standout] Definitions + struct/type names pop by COLOUR only (no bold/italic);
 -- function/method calls sit muted so definitions read at a glance.
-local def_fg  = "#b48e57" -- definitions + structs/types
-local call_fg = "#988b6f" -- calls recede toward body colour
+local def_fg  = "#a0985f" -- khaki: definitions + structs/types (muted)
+local call_fg = "#909073" -- olive-grey: calls recede
 hl(0, "Type", { fg = def_fg })
 hl(0, "@type", { fg = def_fg })
 hl(0, "@type.builtin", { fg = def_fg })
@@ -383,6 +383,8 @@ hl(0, "@method.call", { fg = call_fg })
 hl(0, "@lsp.type.function", { fg = call_fg })
 hl(0, "@lsp.type.method", { fg = call_fg })
 hl(0, "@function.call.rust", { fg = call_fg })
+-- Keywords: cool grey-green, lifted above body, distinct from khaki definitions
+hl(0, "Keyword", { fg = "#9aa39a" })
 -- [Auto pair]
 require("nvim-autopairs").setup({
 	check_ts = true,
