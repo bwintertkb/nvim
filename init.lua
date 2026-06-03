@@ -331,22 +331,22 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 		hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#50fa7b" })
 	end,
 })
-vim.cmd.colorscheme('y9nika-less')
+-- [Auto pairvim.cmd.colorscheme('y9nika-less')
 require("y9nika.core").apply {
-	background = "#0e1415",
-	foreground = "#d0cfb8",
-	primary = "#71ade7",
-	secondary = "#95cb82",
-	muted = "#aaaaaa",
-	marker = "#dfdf8e",
+	background = "#1d1813", -- warm dark, lifted off black for eye comfort
+	foreground = "#dcd0a8", -- warm cream: keywords, vars, punctuation
+	primary    = "#e6a23c", -- amber accent: functions + types (was blue)
+	secondary  = "#c79a5e", -- muted warm brown
+	muted      = "#82775f", -- comments + inlay hints
+	marker     = "#e8c454", -- yellow marker/search
 }
-vim.api.nvim_set_hl(0, "Number", { fg = "#9fb4c7" })
-vim.api.nvim_set_hl(0, "Float", { fg = "#9fb4c7" })
-vim.api.nvim_set_hl(0, "Boolean", { fg = "#9fb4c7" })
-vim.api.nvim_set_hl(0, "Comment", { fg = "#8a8f93" })
+vim.api.nvim_set_hl(0, "Number", { fg = "#c79a5e" })
+vim.api.nvim_set_hl(0, "Float", { fg = "#c79a5e" })
+vim.api.nvim_set_hl(0, "Boolean", { fg = "#c79a5e" })
+vim.api.nvim_set_hl(0, "Comment", { fg = "#82775f" })
 local hl = vim.api.nvim_set_hl
 hl(0, "@comment", { link = "Comment" })
-hl(0, "@string", { fg = "#a9b665" })
+hl(0, "@string", { fg = "#e0894a" })
 hl(0, "@number", { link = "Number" })
 hl(0, "@float", { link = "Float" })
 hl(0, "@boolean", { link = "Boolean" })
@@ -380,8 +380,7 @@ hl(0, "@lsp.type.function", { link = "Function" })
 hl(0, "@lsp.type.method", { link = "Function" })
 hl(0, "@lsp.typemod.function.declaration", { link = "Function" })
 hl(0, "@lsp.typemod.method.declaration", { link = "Function" })
-hl(0, "@function.call.rust", { fg = "#71ade7" })
--- [Auto pair]
+hl(0, "@function.call.rust", { fg = "#e6a23c" })
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
