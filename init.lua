@@ -1,6 +1,5 @@
 vim.g.mapleader = " "
 vim.cmd("filetype plugin indent on")
-
 -- [Global general keymaps]
 vim.api.nvim_set_keymap('i', 'jk', '<ESC>', { noremap = true })
 vim.api.nvim_set_keymap('n', 'H', '^', { noremap = true })
@@ -15,7 +14,6 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 		vim.hl.on_yank()
 	end,
 })
-
 -- Auto-close terminal buffers when shell exits
 vim.api.nvim_create_autocmd("TermClose", {
 	callback = function(args)
@@ -26,7 +24,6 @@ vim.api.nvim_create_autocmd("TermClose", {
 		end)
 	end,
 })
-
 -- [Smart :q] close split -> close tab -> quit
 vim.api.nvim_create_user_command("Qq", function()
 	if vim.fn.winnr("$") > 1 then
@@ -35,14 +32,12 @@ vim.api.nvim_create_user_command("Qq", function()
 	end
 	vim.cmd("q")
 end, {})
-
 vim.cmd([[cnoreabbrev <expr> q (getcmdtype() == ':' && getcmdline() ==# 'q') ? 'Qq' : 'q']])
-
 -- [Cursor]
 vim.opt.guicursor = "n-v-c:block-Cursor-blinkon0,i-ci-ve:block-CursorInsert-blinkon0,r-cr-o:block-CursorReplace-blinkon0"
 vim.o.cursorline = true
-local normal_bg = "#1a1f20"
-local insert_bg = "#252a2b"
+local normal_bg = "#1c1a15"
+local insert_bg = "#23201a"
 vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg })
 vim.api.nvim_create_autocmd("InsertEnter", {
 	callback = function()
@@ -75,7 +70,6 @@ vim.o.grepprg = "rg --vimgrep --smart-case"
 vim.o.grepformat = "%f:%l:%c:%m"
 vim.o.autochdir = false
 vim.o.scrollback = 100000
-
 -- PHP auto indentation
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "php",
@@ -83,7 +77,6 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.bo.autoindent = true
 	end,
 })
-
 -- [Shell]
 vim.api.nvim_create_user_command("R", function(opts)
 	local output = vim.fn.systemlist(opts.args)
@@ -108,7 +101,6 @@ end, {
 	end,
 })
 vim.keymap.set("n", "<leader>r", ":R ", { desc = "Run shell command" })
-
 -- [Window navigation] (works with tmux.nvim plugin for seamless pane switching)
 local function map(mode, lhs, rhs, opts)
 	opts = opts or {}
@@ -325,28 +317,29 @@ vim.o.termguicolors = true
 vim.api.nvim_create_autocmd("ColorScheme", {
 	callback = function()
 		local hl = vim.api.nvim_set_hl
-		hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5555" })
-		hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#f1fa8c" })
-		hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#8be9fd" })
-		hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#50fa7b" })
+		-- Muted diagnostic undercurls (toned down to fit the soft grey-brown palette)
+		hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#9a5d54" })
+		hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#9a874b" })
+		hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#6e8189" })
+		hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#74856c" })
 	end,
 })
--- [Auto pairvim.cmd.colorscheme('y9nika-less')
+vim.cmd.colorscheme('y9nika-less')
 require("y9nika.core").apply {
-	background = "#1d1813", -- warm dark, lifted off black for eye comfort
-	foreground = "#dcd0a8", -- warm cream: keywords, vars, punctuation
-	primary    = "#e6a23c", -- amber accent: functions + types (was blue)
-	secondary  = "#c79a5e", -- muted warm brown
-	muted      = "#82775f", -- comments + inlay hints
-	marker     = "#e8c454", -- yellow marker/search
+	background = "#161410", -- dark grey-brown
+	foreground = "#988f7d", -- desaturated greige text
+	primary    = "#b48e57", -- warm tan: definitions + structs/types
+	secondary  = "#897d64", -- grey-brown: numbers, constants
+	muted      = "#6b6454", -- grey-brown: comments + hints
+	marker     = "#ad9252", -- muted amber highlight
 }
-vim.api.nvim_set_hl(0, "Number", { fg = "#c79a5e" })
-vim.api.nvim_set_hl(0, "Float", { fg = "#c79a5e" })
-vim.api.nvim_set_hl(0, "Boolean", { fg = "#c79a5e" })
-vim.api.nvim_set_hl(0, "Comment", { fg = "#82775f" })
+vim.api.nvim_set_hl(0, "Number", { fg = "#897d64" })
+vim.api.nvim_set_hl(0, "Float", { fg = "#897d64" })
+vim.api.nvim_set_hl(0, "Boolean", { fg = "#897d64" })
+vim.api.nvim_set_hl(0, "Comment", { fg = "#6b6454", italic = false })
 local hl = vim.api.nvim_set_hl
-hl(0, "@comment", { link = "Comment" })
-hl(0, "@string", { fg = "#e0894a" })
+hl(0, "@comment", { fg = "#6b6454", italic = false })
+hl(0, "@string", { fg = "#8e8e4f" })
 hl(0, "@number", { link = "Number" })
 hl(0, "@float", { link = "Float" })
 hl(0, "@boolean", { link = "Boolean" })
@@ -356,13 +349,6 @@ hl(0, "@keyword.return", { link = "Keyword" })
 hl(0, "@keyword.operator", { link = "Keyword" })
 hl(0, "@conditional", { link = "Keyword" })
 hl(0, "@repeat", { link = "Keyword" })
-hl(0, "@function", { link = "Function" })
-hl(0, "@function.call", { link = "Function" })
-hl(0, "@function.builtin", { link = "Function" })
-hl(0, "@method", { link = "Function" })
-hl(0, "@method.call", { link = "Function" })
-hl(0, "@type", { link = "Type" })
-hl(0, "@type.builtin", { link = "Type" })
 hl(0, "@constant", { link = "Constant" })
 hl(0, "@constant.builtin", { link = "Constant" })
 hl(0, "@field", { link = "Identifier" })
@@ -376,11 +362,28 @@ hl(0, "@lsp.type.property", { link = "Identifier" })
 hl(0, "@variable.lua", { link = "@function.call.lua" })
 hl(0, "@y9nika.variable", { link = "@function.call.lua" })
 hl(0, "@y9nika.variable.lua", { link = "@function.call.lua" })
-hl(0, "@lsp.type.function", { link = "Function" })
-hl(0, "@lsp.type.method", { link = "Function" })
-hl(0, "@lsp.typemod.function.declaration", { link = "Function" })
-hl(0, "@lsp.typemod.method.declaration", { link = "Function" })
-hl(0, "@function.call.rust", { fg = "#e6a23c" })
+-- [Standout] Definitions + struct/type names pop by COLOUR only (no bold/italic);
+-- function/method calls sit muted so definitions read at a glance.
+local def_fg  = "#b48e57" -- definitions + structs/types
+local call_fg = "#988b6f" -- calls recede toward body colour
+hl(0, "Type", { fg = def_fg })
+hl(0, "@type", { fg = def_fg })
+hl(0, "@type.builtin", { fg = def_fg })
+hl(0, "@lsp.type.struct", { fg = def_fg })
+hl(0, "@lsp.type.enum", { fg = def_fg })
+hl(0, "@lsp.typemod.struct.declaration", { fg = def_fg })
+hl(0, "@function", { fg = def_fg })
+hl(0, "@lsp.typemod.function.declaration", { fg = def_fg })
+hl(0, "@lsp.typemod.method.declaration", { fg = def_fg })
+hl(0, "Function", { fg = call_fg })
+hl(0, "@function.call", { fg = call_fg })
+hl(0, "@function.builtin", { fg = call_fg })
+hl(0, "@method", { fg = call_fg })
+hl(0, "@method.call", { fg = call_fg })
+hl(0, "@lsp.type.function", { fg = call_fg })
+hl(0, "@lsp.type.method", { fg = call_fg })
+hl(0, "@function.call.rust", { fg = call_fg })
+-- [Auto pair]
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
@@ -416,8 +419,8 @@ vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
 })
 -- Statusline diagnostic highlights (muted red for errors, muted yellow for warnings)
 local function set_diag_highlights()
-	vim.api.nvim_set_hl(0, "StatusDiagError", { fg = "#c45a5a", bg = "NONE" })
-	vim.api.nvim_set_hl(0, "StatusDiagWarn", { fg = "#c4a94a", bg = "NONE" })
+	vim.api.nvim_set_hl(0, "StatusDiagError", { fg = "#9a5d54", bg = "NONE" })
+	vim.api.nvim_set_hl(0, "StatusDiagWarn", { fg = "#9a874b", bg = "NONE" })
 end
 set_diag_highlights()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = set_diag_highlights })
@@ -457,7 +460,6 @@ function StatusLine()
 		" L:%l/%L C:%c ",
 	})
 end
-
 vim.o.statusline = "%{%v:lua.StatusLine()%}"
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
 	callback = function()
@@ -479,14 +481,12 @@ function TabLine()
 	s = s .. "%#TabLineFill#"
 	return s
 end
-
 -- [Blade filetype detection]
 vim.filetype.add({
 	pattern = {
 		[".*%.blade%.php"] = "blade",
 	},
 })
-
 vim.o.tabline = "%!v:lua.TabLine()"
 -- [Copilot]
 require("copilot").setup({
@@ -551,10 +551,8 @@ vim.keymap.set("n", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Expla
 vim.keymap.set("v", "<leader>ce", "<cmd>CopilotChatExplain<cr>", { desc = "Explain selection" })
 vim.keymap.set("n", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix code" })
 vim.keymap.set("v", "<leader>cf", "<cmd>CopilotChatFix<cr>", { desc = "Fix selection" })
-
 -- [Completion with blink.cmp]
 vim.g.blink_enabled = true
-
 vim.keymap.set("n", "<M-b>", function()
 	vim.g.blink_enabled = not vim.g.blink_enabled
 	if vim.g.blink_enabled then
@@ -563,7 +561,6 @@ vim.keymap.set("n", "<M-b>", function()
 		vim.api.nvim_echo({ { "  Blink Disabled  ", "WarningMsg" } }, false, {})
 	end
 end, { desc = "Toggle Blink Completion" })
-
 require("blink.cmp").setup({
 	enabled = function() return vim.g.blink_enabled end,
 	keymap = {
@@ -593,10 +590,8 @@ require("blink.cmp").setup({
 	},
 	signature = { enabled = false },
 })
-
 -- [GIT]
 vim.keymap.set("n", "<leader>gs", vim.cmd.Git, { desc = "Git status (Fugitive)" })
-
 -- [LSP CONFIG]
 vim.api.nvim_create_autocmd('LspAttach', {
 	callback = function(args)
@@ -650,7 +645,6 @@ end
 vim.keymap.set('n', '<leader>f', function()
 	local ft = vim.bo.filetype
 	local formatter = formatters[ft]
-
 	if formatter and formatter_exists(formatter) then
 		local view = vim.fn.winsaveview()
 		vim.bo.formatprg = formatter
@@ -658,7 +652,6 @@ vim.keymap.set('n', '<leader>f', function()
 		vim.fn.winrestview(view)
 		return
 	end
-
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	for _, client in ipairs(clients) do
 		if client:supports_method('textDocument/formatting') then
@@ -666,7 +659,6 @@ vim.keymap.set('n', '<leader>f', function()
 			return
 		end
 	end
-
 	vim.notify("No formatter configured for " .. ft, vim.log.levels.WARN)
 end, { desc = 'Format file' })
 -- Rust
