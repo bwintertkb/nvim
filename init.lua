@@ -327,19 +327,19 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 vim.cmd.colorscheme('y9nika-less')
 require("y9nika.core").apply {
 	background = "#161410", -- dark base (unchanged)
-	foreground = "#989680", -- khaki-grey body text
-	primary    = "#b0a45e", -- khaki: definitions + structs/types
-	secondary  = "#998d66", -- grey-brown: numbers, constants
-	muted      = "#66685a", -- grey-brown: comments + hints
-	marker     = "#c2b46a", -- muted amber highlight
+	foreground = "#b3a87e", -- soft yellow body text (eased)
+	primary    = "#b3a87e", -- variable/body colour: types blend in (functions overridden to green)
+	secondary  = "#b3a87e", -- yellow: numbers, constants (match body)
+	muted      = "#66695b", -- dim olive-grey: comments + hints
+	marker     = "#bda06f", -- muted tan highlight
 }
-vim.api.nvim_set_hl(0, "Number", { fg = "#998d66" })
-vim.api.nvim_set_hl(0, "Float", { fg = "#998d66" })
-vim.api.nvim_set_hl(0, "Boolean", { fg = "#998d66" })
-vim.api.nvim_set_hl(0, "Comment", { fg = "#66685a", italic = false })
+vim.api.nvim_set_hl(0, "Number", { fg = "#b3a87e" })
+vim.api.nvim_set_hl(0, "Float", { fg = "#b3a87e" })
+vim.api.nvim_set_hl(0, "Boolean", { fg = "#b3a87e" })
+vim.api.nvim_set_hl(0, "Comment", { fg = "#66695b", italic = false })
 local hl = vim.api.nvim_set_hl
-hl(0, "@comment", { fg = "#66685a", italic = false })
-hl(0, "@string", { fg = "#8b9450" })
+hl(0, "@comment", { fg = "#66695b", italic = false })
+hl(0, "@string", { fg = "#8a9a54" })
 hl(0, "@number", { link = "Number" })
 hl(0, "@float", { link = "Float" })
 hl(0, "@boolean", { link = "Boolean" })
@@ -364,27 +364,37 @@ hl(0, "@y9nika.variable", { link = "@function.call.lua" })
 hl(0, "@y9nika.variable.lua", { link = "@function.call.lua" })
 -- [Standout] Definitions + struct/type names pop by COLOUR only (no bold/italic);
 -- function/method calls sit muted so definitions read at a glance.
-local def_fg  = "#a0985f" -- khaki: definitions + structs/types (muted)
-local call_fg = "#909073" -- olive-grey: calls recede
-hl(0, "Type", { fg = def_fg })
-hl(0, "@type", { fg = def_fg })
-hl(0, "@type.builtin", { fg = def_fg })
-hl(0, "@lsp.type.struct", { fg = def_fg })
-hl(0, "@lsp.type.enum", { fg = def_fg })
-hl(0, "@lsp.typemod.struct.declaration", { fg = def_fg })
-hl(0, "@function", { fg = def_fg })
-hl(0, "@lsp.typemod.function.declaration", { fg = def_fg })
-hl(0, "@lsp.typemod.method.declaration", { fg = def_fg })
-hl(0, "Function", { fg = call_fg })
-hl(0, "@function.call", { fg = call_fg })
-hl(0, "@function.builtin", { fg = call_fg })
-hl(0, "@method", { fg = call_fg })
-hl(0, "@method.call", { fg = call_fg })
-hl(0, "@lsp.type.function", { fg = call_fg })
-hl(0, "@lsp.type.method", { fg = call_fg })
-hl(0, "@function.call.rust", { fg = call_fg })
+local type_fg = "#b3a87e" -- variable/body colour: types + structs blend with variables
+local fn_fg   = "#8a8d72" -- green: functions (definitions + calls)
+-- Every type-like token -> def_fg: struct/enum declarations, type usages,
+-- and the imported names inside `use a::{B, C}` (which carry different groups).
+for _, g in ipairs({
+	"Type", "@type", "@type.builtin", "@type.definition", "@constructor",
+	"@lsp.type.struct", "@lsp.type.enum", "@lsp.type.union",
+	"@lsp.type.interface", "@lsp.type.typeAlias", "@lsp.type.typeParameter",
+	"@lsp.typemod.struct.declaration", "@lsp.typemod.struct.definition",
+	"@lsp.typemod.enum.declaration", "@lsp.typemod.typeAlias.declaration",
+	"@lsp.typemod.struct.library", "@lsp.typemod.enum.library",
+	"@lsp.typemod.struct.defaultLibrary", "@lsp.typemod.enum.defaultLibrary",
+}) do
+	hl(0, g, { fg = type_fg })
+end
+-- Function definitions
+hl(0, "@function", { fg = fn_fg })
+hl(0, "@lsp.typemod.function.declaration", { fg = fn_fg })
+hl(0, "@lsp.typemod.method.declaration", { fg = fn_fg })
+hl(0, "Function", { fg = fn_fg })
+hl(0, "@function.call", { fg = fn_fg })
+hl(0, "@function.builtin", { fg = fn_fg })
+hl(0, "@method", { fg = fn_fg })
+hl(0, "@method.call", { fg = fn_fg })
+hl(0, "@lsp.type.function", { fg = fn_fg })
+hl(0, "@lsp.type.method", { fg = fn_fg })
+hl(0, "@function.call.rust", { fg = fn_fg })
 -- Keywords: cool grey-green, lifted above body, distinct from khaki definitions
-hl(0, "Keyword", { fg = "#9aa39a" })
+hl(0, "Keyword", { fg = "#76817b" })
+-- Inlay hints (lsp-endhints): darker blue-grey so they recede
+hl(0, "LspInlayHint", { link = "Comment" })
 -- [Auto pair]
 require("nvim-autopairs").setup({
 	check_ts = true,
